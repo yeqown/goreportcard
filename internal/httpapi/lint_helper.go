@@ -36,6 +36,8 @@ func Init() {
 		"github.com":        "git",
 		"git.medlinker.com": "medgit",
 	})
+
+	loadTpls()
 }
 
 // TODO: add comments, adjust logic here
@@ -51,7 +53,7 @@ func dolint(repoName string, forceRefresh bool) (model.LintResult, error) {
 	}
 
 	// fetch the repoName and grade it
-	root, err := downloader.Download(repoName, "_repos/src")
+	root, err := downloader.Download(repoName, model.GetConfig().RepoRoot)
 	if err != nil {
 		return model.LintResult{}, fmt.Errorf("could not clone repoName: %v", err)
 	}
@@ -90,7 +92,6 @@ func dolint(repoName string, forceRefresh bool) (model.LintResult, error) {
 	isNewRepo = (len(v) == 0 || errors.Cause(err) == repository.ErrKeyNotFound)
 
 	// if this is a new repo, or the user force-refreshed, update the cache
-	// TODO: make update as a function
 	if isNewRepo || forceRefresh {
 		if err = updateLintResult(repoName, lintResult); err != nil {
 			log.Errorf("dolint update lintResult failed key=%s, err=%v", key, err)
@@ -110,8 +111,8 @@ func lintResultKey(repoName string) []byte {
 	return []byte("repos-" + repoName)
 }
 
-// loadLintResult .
-// TODO: add comments
+// loadLintResult query lintResult by repoName, if hit in DB then return,
+// otherwsie return an error.
 func loadLintResult(repoName string) (*model.LintResult, error) {
 	key := lintResultKey(repoName)
 	data, err := repository.GetRepo().Get(key)
@@ -132,8 +133,7 @@ func loadLintResult(repoName string) (*model.LintResult, error) {
 	return resp, nil
 }
 
-// updateLintResult .
-// TODO: add more comments
+// updateLintResult update lintResult in DB.
 func updateLintResult(repoName string, result model.LintResult) error {
 	data, err := json.Marshal(result)
 	if err != nil {
@@ -372,7 +372,7 @@ func updateMetadata(result model.LintResult, repoName string, isNewRepo bool) (e
 	if err = updateHighScores(result, repoName); err != nil {
 		log.Errorf("updateMetadata.updateHighScores failed: err=%v", err)
 	}
-	log.Debugf("updateMetadata success")
+	log.Infof("updateMetadata success")
 
 	return
 }

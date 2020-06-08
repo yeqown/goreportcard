@@ -20,7 +20,7 @@ var (
 	tplSupport   *template.Template
 )
 
-func init() {
+func loadTpls() {
 	tpl404 = template.Must(
 		template.New("404.html").
 			ParseFiles("templates/404.html", "templates/footer.html"))

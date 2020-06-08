@@ -84,3 +84,31 @@ func TestEnsurePath(t *testing.T) {
 		})
 	}
 }
+
+func Test_countFiles(t *testing.T) {
+	type args struct {
+		path      string
+		recursive bool
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantCnt int
+	}{
+		{
+			name: "case 0",
+			args: args{
+				path:      ".",
+				recursive: true,
+			},
+			wantCnt: 2,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if gotCnt, gotErr := countFiles(tt.args.path, tt.args.recursive); gotCnt != tt.wantCnt || gotErr != nil {
+				t.Errorf("countFiles() = (%v, %v), want %v", gotCnt, gotErr, tt.wantCnt)
+			}
+		})
+	}
+}

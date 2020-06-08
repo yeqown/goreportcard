@@ -2,8 +2,10 @@ package helper
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/pkg/errors"
+	"github.com/yeqown/log"
 )
 
 var (
@@ -43,4 +45,46 @@ func EnsurePath(path string) (err error) {
 	}
 
 	return errors.Wrap(err, "fs.EnsurePath failed to check path")
+}
+
+func IsEmptyDir(path string) (empty bool) {
+	cnt, err := countFiles(path, true)
+	if err != nil {
+		// FIXME: TRUE: any error means dir not empty ?
+		return false
+	}
+
+	return cnt == 0
+}
+
+// coutnFiles under path
+func countFiles(path string, recursive bool) (cnt int, err error) {
+	dirs := make([]string, 1, 10)
+	dirs[0] = path
+
+	walkFn := func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return errors.Wrap(err, "countFiles.walkFn")
+		}
+
+		if info.IsDir() && recursive {
+			dirs = append(dirs, path)
+			return nil
+		}
+
+		cnt++
+
+		// TODO: maybe need to skip somefiles
+		return nil
+	}
+
+	for _, dir := range dirs {
+		if err = filepath.Walk(dir, walkFn); err != nil {
+			log.Warnf("countFiles got an error, dir=%s, err=%v", dir, err)
+			err = errors.Wrap(err, "countFiles.Walk")
+			return
+		}
+	}
+
+	return
 }

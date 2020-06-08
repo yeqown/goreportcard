@@ -3,6 +3,7 @@ module github.com/gojp/goreportcard
 go 1.14
 
 require (
+	github.com/BurntSushi/toml v0.3.1
 	github.com/beorn7/perks v0.0.0-20160804104726-4c0e84591b9a // indirect
 	github.com/dgraph-io/badger v1.6.1-0.20190924140636-a425b0eafac0
 	github.com/dgraph-io/ristretto v0.0.0-20190928180628-8acd55ed71b0 // indirect

@@ -7,28 +7,28 @@ import (
 	"time"
 
 	"github.com/gojp/goreportcard/internal/httpapi"
+	"github.com/gojp/goreportcard/internal/model"
 	"github.com/gojp/goreportcard/internal/repository"
+
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/yeqown/log"
 )
 
-// const (
-// 	repoHome = ".repos/src"
-// )
-
 func startWebServer(port int) error {
 	httpapi.Init()
-	repository.Init() // TODO: handle error
+	if err := repository.Init(); err != nil {
+		return errors.Wrap(err, "startWebServer.repository.Init")
+	}
 	defer repository.GetRepo().Close()
 
-	// TODO: 配置存放代码的位置可配置
-	if err := os.MkdirAll("_repos/src", 0755); err != nil && !os.IsExist(err) {
+	if err := os.MkdirAll(model.GetConfig().RepoRoot, 0755); err != nil && !os.IsExist(err) {
 		log.Fatal("ERROR: could not create repos dir: ", err)
 	}
 
 	// prometheus metrics
-	var m = setupMetrics()
+	var m = newMetrics()
 
 	http.HandleFunc(m.instrument("/assets/", httpapi.AssetsHandler))
 	http.HandleFunc(m.instrument("/favicon.ico", httpapi.FaviconHandler))
@@ -53,9 +53,9 @@ type metrics struct {
 	responseTimes *prometheus.SummaryVec
 }
 
-// setupMetrics creates custom Prometheus metrics for monitoring
+// newMetrics creates custom Prometheus metrics for monitoring
 // application statistics.
-func setupMetrics() *metrics {
+func newMetrics() *metrics {
 	m := &metrics{}
 	m.responseTimes = prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{

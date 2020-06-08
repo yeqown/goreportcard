@@ -27,7 +27,7 @@ func NewRedisRepo() (IRepository, error) {
 func (rd redisRepo) Get(key []byte) ([]byte, error) {
 	out, err := rd.Client.Get(string(key)).Bytes()
 	if err != nil && err == redis.Nil {
-		// TODO: handler not exists error
+		// DONE: handler not exists error
 		return nil, ErrKeyNotFound
 	}
 

@@ -56,11 +56,22 @@ func (btvcs builtinToolVCS) Download(repoURL string, localDir string) (repoRoot 
 	}
 	remoteURI := wrapRepoURL(prefix, host, owner, repoName)
 
-	// FIXME: check path exist or not, if exists then using download
-	if err := btvcs.Cmd.Create(localDir, remoteURI); err != nil {
-		log.Warnf("builtinToolVCS.Download failed to Cmd.Create, err=%v", err)
-		return localDir, err
+	if btvcs.shouldCreate(localDir) {
+		// FIXED: check path exist or not, if exists then using download
+		if err := btvcs.Cmd.Create(localDir, remoteURI); err != nil {
+			log.Warnf("builtinToolVCS.Download failed to Cmd.Create, err=%v", err)
+		}
+	} else {
+		// repo has exists
+		if err := btvcs.Cmd.Download(localDir); err != nil {
+			log.Warnf("builtinToolVCS.Download failed to Cmd.Download, err=%v", err)
+		}
 	}
 
-	return localDir, nil
+	return localDir, err
+}
+
+// shouldCreate if dir is empty means should Create else Download
+func (btvcs builtinToolVCS) shouldCreate(localDir string) bool {
+	return helper.IsEmptyDir(localDir)
 }

@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/gojp/goreportcard/internal/model"
+
 	"github.com/yeqown/log"
 )
 
@@ -25,22 +26,12 @@ type ILinter interface {
 	Percentage() (float64, []model.FileSummary, error)
 }
 
-// getLinters . load all linters to run
-func getLinters(dir string, filenames []string) []ILinter {
-	return []ILinter{
-		GoFmt{Dir: dir, Filenames: filenames},       //
-		GoVet{Dir: dir, Filenames: filenames},       //
-		GoLint{Dir: dir, Filenames: filenames},      //
-		GoCyclo{Dir: dir, Filenames: filenames},     //
-		License{Dir: dir, Filenames: []string{}},    //
-		Misspell{Dir: dir, Filenames: filenames},    //
-		IneffAssign{Dir: dir, Filenames: filenames}, //
-		ErrCheck{Dir: dir, Filenames: filenames},    // disable errcheck for now, too slow and not finalized
-	}
-}
-
 // Lint executes all checks on the given directory
-// TODO: support linter options and optimise this function logic
+//
+// 1. get repo status: @fileCount @lineCount
+// 2. call `golangci-lint` to lint, get errors
+// 3. calc score of each linters
+// 4. return result
 func Lint(dir string) (model.ChecksResult, error) {
 	log.Debugf("Lint recv params @dir=%s", dir)
 
@@ -48,19 +39,13 @@ func Lint(dir string) (model.ChecksResult, error) {
 	if err != nil {
 		return model.ChecksResult{}, fmt.Errorf("could not get filenames: %v", err)
 	}
+	_ = skipped
 	if len(filenames) == 0 {
 		return model.ChecksResult{}, fmt.Errorf("no .go files found")
 	}
 
-	err = RenameFiles(skipped)
-	if err != nil {
-		log.Errorf("Could not remove files, err=%v", err)
-	}
-	defer RevertFiles(skipped)
-
 	var (
 		linters   = getLinters(dir, filenames)
-		n         = len(linters)
 		chanScore = make(chan model.Score)
 	)
 
@@ -70,32 +55,33 @@ func Lint(dir string) (model.ChecksResult, error) {
 
 	var (
 		total, totalWeight float64
-		r                  = model.ChecksResult{
-			Files: len(filenames),
-		}
-		issuesCnt int
-		// issues             = make(map[string]bool)
+		issuesCnt          int
+		n                  = len(linters)
+		scores             = make(model.ByWeight, 0, 64)
 	)
 
 	// calc grade and score, then save into `model.CheckResult`
 	for i := 0; i < n; i++ {
 		score := <-chanScore
-		r.Scores = append(r.Scores, score)
+		scores = append(scores, score)
+
 		total += score.Percentage * score.Weight
 		totalWeight += score.Weight
-		// for _, fs := range s.FileSummaries {
-		// 	issues[fs.Filename] = true
-		// }
-		issuesCnt++
+		for _, summary := range score.FileSummaries {
+			issuesCnt += len(summary.Errors)
+		}
 	}
 	close(chanScore)
-
 	total /= totalWeight
-	sort.Sort(model.ByWeight(r.Scores))
-	r.Average = total
-	// r.Issues = len(issues)
-	r.Issues = issuesCnt
-	r.Grade = model.GradeFromPercentage(total * 100)
+	sort.Sort(scores)
+
+	r := model.ChecksResult{
+		Files:   len(filenames),
+		Issues:  issuesCnt,
+		Average: total,
+		Scores:  scores,
+		Grade:   model.GradeFromPercentage(total * 100),
+	}
 
 	return r, nil
 }
@@ -109,6 +95,7 @@ func execLinter(linter ILinter, chanScore chan<- model.Score) {
 		errMsg = err.Error()
 	}
 
+	// send score to channel
 	score := model.Score{
 		Name:          linter.Name(),
 		Description:   linter.Description(),

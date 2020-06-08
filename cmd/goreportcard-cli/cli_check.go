@@ -1,53 +1,37 @@
 package main
 
 import (
-	"encoding/json"
-	"flag"
 	"fmt"
-	"log"
-	"os"
 
 	"github.com/gojp/goreportcard/internal/linter"
+
+	"github.com/yeqown/log"
 )
 
-var (
-	dir     = flag.String("d", ".", "Root directory of your Go application")
-	verbose = flag.Bool("v", false, "Verbose output")
-	th      = flag.Float64("t", 0, "Threshold of failure command")
-	jsn     = flag.Bool("j", false, "JSON output. The binary will always exit with code 0")
-)
+func cliCheck(dir string, verbose bool) error {
+	log.SetLogLevel(log.LevelError)
 
-func cliCheck() {
-	flag.Parse()
-
-	result, err := linter.Lint(*dir)
+	r, err := linter.Lint(dir)
 	if err != nil {
-		log.Fatalf("Fatal error checking %s: %s", *dir, err.Error())
+		log.Errorf("Fatal error checking %s: %s", dir, err.Error())
+		return err
 	}
 
-	if *jsn {
-		marshalledResults, _ := json.Marshal(result)
-		fmt.Println(string(marshalledResults))
-		os.Exit(0)
-	}
+	fmt.Printf("Grade: %s (%.1f%%)\n", r.Grade, r.Average*100)
+	fmt.Printf("Files: %d\n", r.Files)
+	fmt.Printf("Issues: %d\n", r.Issues)
 
-	fmt.Printf("Grade: %s (%.1f%%)\n", result.Grade, result.Average*100)
-	fmt.Printf("Files: %d\n", result.Files)
-	fmt.Printf("Issues: %d\n", result.Issues)
-
-	for _, c := range result.Scores {
-		fmt.Printf("%s: %d%%\n", c.Name, int64(c.Percentage*100))
-		if *verbose && len(c.FileSummaries) > 0 {
-			for _, f := range c.FileSummaries {
-				fmt.Printf("\t%s\n", f.Filename)
-				for _, e := range f.Errors {
-					fmt.Printf("\t\tLine %d: %s\n", e.LineNumber, e.ErrorString)
+	for _, score := range r.Scores {
+		fmt.Printf("%s: %d%%\n", score.Name, int64(score.Percentage*100))
+		if verbose && len(score.FileSummaries) > 0 {
+			for _, summary := range score.FileSummaries {
+				fmt.Printf("\t%s\n", summary.Filename)
+				for _, err := range summary.Errors {
+					fmt.Printf("\t\tLine %d: %s\n", err.LineNumber, err.ErrorString)
 				}
 			}
 		}
 	}
 
-	if result.Average*100 < *th {
-		os.Exit(1)
-	}
+	return nil
 }

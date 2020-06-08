@@ -1,12 +1,13 @@
 package main
 
-import "github.com/urfave/cli"
+import (
+	"github.com/urfave/cli"
+)
 
 func mountCommands(app *cli.App) {
 	app.Commands = []cli.Command{
 		getStartSevrerCommand(),
 		getCliCheckCommand(),
-		getCleanRepoCommand(),
 		getManageDBCommand(),
 	}
 }
@@ -33,17 +34,31 @@ func getStartSevrerCommand() cli.Command {
 }
 
 func getCliCheckCommand() cli.Command {
+	var (
+		dir     string
+		verbose bool
+	)
+
 	return cli.Command{
+		Name:  "run",
+		Usage: "running goreportcard-cli to lint project in terminal",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:        "dir",
+				Usage:       "specify an dir of golang project to run",
+				Value:       ".",
+				Destination: &dir,
+			},
+			cli.BoolFlag{
+				Name:        "verbose",
+				Usage:       "to show more detail about lint result",
+				Destination: &verbose,
+			},
+		},
 		Action: func(c *cli.Context) error {
-			cliCheck()
-			return nil
+			return cliCheck(dir, verbose)
 		},
 	}
-}
-
-// TODO:
-func getCleanRepoCommand() cli.Command {
-	return cli.Command{}
 }
 
 // TODO:
