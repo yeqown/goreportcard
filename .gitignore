@@ -30,6 +30,7 @@ _repos
 goreportcard.db
 .vscode/
 goreportcard-cli
+!goreportcard-cli/
 testdata/
 .badger
 git_downloader_up_test.go
