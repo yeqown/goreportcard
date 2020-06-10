@@ -39,7 +39,7 @@ func startWebServer(port int) error {
 	http.HandleFunc(m.instrument("/supporters/", httpapi.SupportersHandler))
 	http.HandleFunc(m.instrument("/about/", httpapi.AboutHandler))
 	http.HandleFunc(m.instrument("/", httpapi.HomeHandler))
-	// register prometheus metrics hanlder
+	// register prometheus metrics handler
 	http.Handle("/metrics", promhttp.Handler())
 
 	addr := fmt.Sprintf("0.0.0.0:%d", port)

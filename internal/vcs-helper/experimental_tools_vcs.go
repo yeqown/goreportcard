@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/gojp/goreportcard/internal/helper"
+
 	"github.com/pkg/errors"
 	"github.com/yeqown/log"
 	"golang.org/x/tools/go/vcs"
@@ -32,7 +33,7 @@ func NewBuiltinToolVCS(cfgs map[string]string) IDownloader {
 }
 
 // Download .
-func (btvcs builtinToolVCS) Download(repoURL string, localDir string) (repoRoot string, err error) {
+func (vcs builtinToolVCS) Download(repoURL string, localDir string) (repoRoot string, err error) {
 	outs, err := hdlRepoURL(repoURL)
 	if err != nil {
 		log.Errorf("could hdl repoURL=%s, err=%v", repoURL, err)
@@ -51,19 +52,19 @@ func (btvcs builtinToolVCS) Download(repoURL string, localDir string) (repoRoot 
 		prefix string
 		ok     bool
 	)
-	if prefix, ok = btvcs.gitPrefixes[host]; !ok {
+	if prefix, ok = vcs.gitPrefixes[host]; !ok {
 		return "", errors.New("gitDownload.clone no such host config")
 	}
 	remoteURI := wrapRepoURL(prefix, host, owner, repoName)
 
-	if btvcs.shouldCreate(localDir) {
+	if vcs.shouldCreate(localDir) {
 		// FIXED: check path exist or not, if exists then using download
-		if err := btvcs.Cmd.Create(localDir, remoteURI); err != nil {
+		if err := vcs.Cmd.Create(localDir, remoteURI); err != nil {
 			log.Warnf("builtinToolVCS.Download failed to Cmd.Create, err=%v", err)
 		}
 	} else {
 		// repo has exists
-		if err := btvcs.Cmd.Download(localDir); err != nil {
+		if err := vcs.Cmd.Download(localDir); err != nil {
 			log.Warnf("builtinToolVCS.Download failed to Cmd.Download, err=%v", err)
 		}
 	}
@@ -72,6 +73,6 @@ func (btvcs builtinToolVCS) Download(repoURL string, localDir string) (repoRoot 
 }
 
 // shouldCreate if dir is empty means should Create else Download
-func (btvcs builtinToolVCS) shouldCreate(localDir string) bool {
+func (vcs builtinToolVCS) shouldCreate(localDir string) bool {
 	return helper.IsEmptyDir(localDir)
 }

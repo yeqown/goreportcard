@@ -15,11 +15,11 @@ import (
 	"github.com/yeqown/log"
 )
 
-// SSHPrikeyConfig ssh clone public key config
-type SSHPrikeyConfig struct {
-	Host       string // host of git server
-	PrikeyPath string // private key pem path
-	Prefix     string // prefix of git server. refer prefix@host:owner/repoName
+// SSHPrivateKeyConfig ssh clone public key config
+type SSHPrivateKeyConfig struct {
+	Host           string // host of git server
+	PrivateKeyPath string // private key pem path
+	Prefix         string // prefix of git server. refer prefix@host:owner/repoName
 }
 
 // gitDownloader to clone repo withs git ssh request
@@ -29,7 +29,7 @@ type gitDownloader struct {
 }
 
 // NewGitDownloader with ssh configs
-func NewGitDownloader(cfgs []*SSHPrikeyConfig) IDownloader {
+func NewGitDownloader(cfgs []*SSHPrivateKeyConfig) IDownloader {
 	gitd := gitDownloader{
 		publicKeys:  make(map[string]*gitssh.PublicKeys),
 		gitPrefixes: make(map[string]string),
@@ -37,14 +37,14 @@ func NewGitDownloader(cfgs []*SSHPrikeyConfig) IDownloader {
 
 	// load pem file with host
 	for _, v := range cfgs {
-		abspath, err := filepath.Abs(v.PrikeyPath)
+		path, err := filepath.Abs(v.PrivateKeyPath)
 		if err != nil {
 			log.Errorf("NewGitDownloader failed to get Abs path, err=%v", err)
 			continue
 		}
 
 		// load private key
-		pemBytes, err := ioutil.ReadFile(abspath)
+		pemBytes, err := ioutil.ReadFile(path)
 		if err != nil {
 			log.Errorf("NewGitDownloader failed to open private key file, err=%v", err)
 			continue
@@ -66,13 +66,13 @@ func NewGitDownloader(cfgs []*SSHPrikeyConfig) IDownloader {
 // TODO: with retry less than 3 times
 // @return repo = github.com/owner/xxx
 // @return error
-func (gitd gitDownloader) Download(repoURL string, localDir string) (string, error) {
-	return gitd.clone(repoURL, localDir)
+func (d gitDownloader) Download(repoURL string, localDir string) (string, error) {
+	return d.clone(repoURL, localDir)
 }
 
 // clone to clone repo from remote server
 // it will use ssh public key to clone, config is loaded from config file
-func (gitd gitDownloader) clone(repoURL string, localDir string) (string, error) {
+func (d gitDownloader) clone(repoURL string, localDir string) (string, error) {
 	outs, err := hdlRepoURL(repoURL)
 	if err != nil {
 		log.Errorf("could hdl repoURL=%s, err=%v", repoURL, err)
@@ -87,12 +87,12 @@ func (gitd gitDownloader) clone(repoURL string, localDir string) (string, error)
 	}
 
 	// get sshConfig and prefix of git server to clone
-	auth, ok := gitd.publicKeys[host]
+	auth, ok := d.publicKeys[host]
 	if !ok {
 		log.Errorf("gitDownload.clone failed to get sshConfig of host=%s", host)
 		return localDir, errors.New("gitDownload.clone no such host config")
 	}
-	prefix := gitd.gitPrefixes[host]
+	prefix := d.gitPrefixes[host]
 	log.Infof("starting clone with url=%s", wrapRepoURL(prefix, host, owner, repoName))
 
 	// start clone repo

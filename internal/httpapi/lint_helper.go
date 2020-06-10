@@ -24,10 +24,10 @@ var (
 // Init linter package
 func Init() {
 	// home, _ := os.UserHomeDir()
-	// downloader = vcshelper.NewGitDownloader([]*vcshelper.SSHPrikeyConfig{
+	// downloader = vcshelper.NewGitDownloader([]*vcshelper.SSHPrivateKeyConfig{
 	// 	{
 	// 		Host:       "github.com",
-	// 		PrikeyPath: filepath.Join(home, ".ssh", "id_rsa"),
+	// 		PrivateKeyPath: filepath.Join(home, ".ssh", "id_rsa"),
 	// 		Prefix:     "git",
 	// 	},
 	// })

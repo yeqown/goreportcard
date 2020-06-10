@@ -4,15 +4,17 @@ import (
 	"github.com/urfave/cli"
 )
 
+// mount all command on cli.App
 func mountCommands(app *cli.App) {
 	app.Commands = []cli.Command{
-		getStartSevrerCommand(),
+		getStartServerCommand(),
 		getCliCheckCommand(),
 		getManageDBCommand(),
 	}
 }
 
-func getStartSevrerCommand() cli.Command {
+// generate an command to start web server
+func getStartServerCommand() cli.Command {
 	var port int
 
 	return cli.Command{

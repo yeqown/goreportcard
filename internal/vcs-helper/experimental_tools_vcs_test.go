@@ -9,7 +9,7 @@ func Test_builtinToolVCS_Download(t *testing.T) {
 		"github.com":        "git",
 		"git.medlinker.com": "medgit",
 	}
-	btvcs := NewBuiltinToolVCS(cfgs)
+	vcs := NewBuiltinToolVCS(cfgs)
 
 	type args struct {
 		remoteURI string
@@ -42,7 +42,7 @@ func Test_builtinToolVCS_Download(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRepoRoot, err := btvcs.Download(tt.args.remoteURI, tt.args.localDir)
+			gotRepoRoot, err := vcs.Download(tt.args.remoteURI, tt.args.localDir)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("builtinToolVCS.Download() error = %v, wantErr %v", err, tt.wantErr)
 				return

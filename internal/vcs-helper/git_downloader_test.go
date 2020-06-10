@@ -5,11 +5,11 @@ import (
 )
 
 func Test_gitDownloader_gitlab(t *testing.T) {
-	cfgs := []*SSHPrikeyConfig{
+	cfgs := []*SSHPrivateKeyConfig{
 		{
-			Host:       "git.medlinker.com",
-			PrikeyPath: "/Users/med/.ssh/id_rsa",
-			Prefix:     "medgit",
+			Host:           "git.medlinker.com",
+			PrivateKeyPath: "/Users/med/.ssh/id_rsa",
+			Prefix:         "medgit",
 		},
 	}
 
@@ -24,11 +24,11 @@ func Test_gitDownloader_gitlab(t *testing.T) {
 }
 
 func Test_gitDownloader_github(t *testing.T) {
-	cfgs := []*SSHPrikeyConfig{
+	cfgs := []*SSHPrivateKeyConfig{
 		{
-			Host:       "github.com",
-			PrikeyPath: "/Users/med/.ssh/id_rsa",
-			Prefix:     "git",
+			Host:           "github.com",
+			PrivateKeyPath: "/Users/med/.ssh/id_rsa",
+			Prefix:         "git",
 		},
 	}
 
