@@ -22,9 +22,9 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	// if this is a GET request, try to fetch from cached version in badger first
 	forceRefresh := r.Method != "GET"
 
-	_, err := dolint(repo, forceRefresh)
+	_, err := lint(repo, forceRefresh)
 	if err != nil {
-		log.Errorf("dolint failed, err=%v", err)
+		log.Errorf("lint failed, err=%v", err)
 		Error(w, http.StatusBadRequest, errors.Wrap(err, "Could not analyze the repository"))
 		return
 	}

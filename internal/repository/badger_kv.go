@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/dgraph-io/badger"
+	badger "github.com/dgraph-io/badger/v2"
 	"github.com/pkg/errors"
 	"github.com/yeqown/log"
 )
@@ -33,13 +33,14 @@ func (br badgerRepo) Get(key []byte) (out []byte, err error) {
 			return ErrKeyNotFound
 		}
 
+		log.Debugf("item = %s", item.String())
+
 		// copy value to `out`s
 		out = make([]byte, item.ValueSize())
-		_, err = item.ValueCopy(out)
+		out, err = item.ValueCopy(out)
 		if err != nil {
 			return errors.Wrap(err, "badgerRepo.Get.ValueCopy")
 		}
-
 		return nil
 	}); err != nil {
 		return nil, errors.Wrap(err, "badgerRepo.Get key="+string(key))

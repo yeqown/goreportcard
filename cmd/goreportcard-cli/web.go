@@ -24,7 +24,8 @@ func startWebServer(port int) error {
 	defer repository.GetRepo().Close()
 
 	if err := os.MkdirAll(model.GetConfig().RepoRoot, 0755); err != nil && !os.IsExist(err) {
-		log.Fatal("ERROR: could not create repos dir: ", err)
+		// log.Fatal(": could not create repos dir: ", err)
+		return errors.Wrap(err, "startWebServer.os.MkdirAll")
 	}
 
 	// prometheus metrics
@@ -33,8 +34,8 @@ func startWebServer(port int) error {
 	http.HandleFunc(m.instrument("/assets/", httpapi.AssetsHandler))
 	http.HandleFunc(m.instrument("/favicon.ico", httpapi.FaviconHandler))
 	http.HandleFunc(m.instrument("/checks", httpapi.CheckHandler))
-	http.HandleFunc(m.instrument("/report/", httpapi.MakeHandler("report", httpapi.ReportHandler)))
-	http.HandleFunc(m.instrument("/badge/", httpapi.MakeHandler("badge", httpapi.BadgeHandler)))
+	http.HandleFunc(m.instrument("/report/", httpapi.PathPatternHandler("report", httpapi.ReportHandler)))
+	http.HandleFunc(m.instrument("/badge/", httpapi.PathPatternHandler("badge", httpapi.BadgeHandler)))
 	http.HandleFunc(m.instrument("/high_scores/", httpapi.HighScoresHandler))
 	http.HandleFunc(m.instrument("/supporters/", httpapi.SupportersHandler))
 	http.HandleFunc(m.instrument("/about/", httpapi.AboutHandler))

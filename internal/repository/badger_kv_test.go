@@ -7,10 +7,18 @@ import (
 
 func Test_badgerRepo_Get(t *testing.T) {
 	br, _ := NewBadgerRepo("./.badger")
-	testkey := []byte("testkey")
-	testvalue := []byte("testvalue")
+	key := []byte("key")
+	val := []byte("val")
 
-	if err := br.Update(testkey, testvalue); err != nil {
+	if err := br.Update(key, val); err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	key2 := []byte("key2")
+	val2 := []byte("[{\"Repo\":\"github.com/yeqown/log\"}]")
+
+	if err := br.Update(key2, val2); err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
@@ -27,18 +35,26 @@ func Test_badgerRepo_Get(t *testing.T) {
 		{
 			name: "case 0",
 			args: args{
-				key: testkey,
+				key: key,
 			},
-			want:    testvalue,
+			want:    val,
 			wantErr: false,
 		},
 		{
-			name: "case 0",
+			name: "case 1",
 			args: args{
 				key: []byte("not-ex"),
 			},
 			want:    nil,
 			wantErr: true,
+		},
+		{
+			name: "case 2",
+			args: args{
+				key: key2,
+			},
+			want:    val2,
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {

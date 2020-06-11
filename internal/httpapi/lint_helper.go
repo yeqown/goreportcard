@@ -41,15 +41,15 @@ func Init() {
 }
 
 // TODO: add comments, adjust logic here
-func dolint(repoName string, forceRefresh bool) (model.LintResult, error) {
-	log.Debugf("dolint called with repoName=%s, forceRefresh=%v", repoName, forceRefresh)
+func lint(repoName string, forceRefresh bool) (model.LintResult, error) {
+	log.Debugf("lint called with repoName=%s, forceRefresh=%v", repoName, forceRefresh)
 	if !forceRefresh {
 		resp, err := loadLintResult(repoName)
 		if err == nil {
 			return *resp, nil
 		}
 		// just log the error and continue
-		log.Warnf("dolint failed to loadLintResult, err=%v", err)
+		log.Warnf("lint failed to loadLintResult, err=%v", err)
 	}
 
 	// fetch the repoName and grade it
@@ -57,7 +57,7 @@ func dolint(repoName string, forceRefresh bool) (model.LintResult, error) {
 	if err != nil {
 		return model.LintResult{}, fmt.Errorf("could not clone repoName: %v", err)
 	}
-	log.Infof("dolint download repoName=%s finished", repoName)
+	log.Infof("lint download repoName=%s finished", repoName)
 
 	result, err := linter.Lint(root)
 	if err != nil {
@@ -66,11 +66,11 @@ func dolint(repoName string, forceRefresh bool) (model.LintResult, error) {
 
 	t := time.Now().UTC()
 	lintResult := model.LintResult{
-		Checks:               result.Scores,
+		Scores:               result.Scores,
 		Average:              result.Average,
 		Grade:                result.Grade,
-		Files:                result.Files,
-		Issues:               result.Issues,
+		FilesCount:           result.Files,
+		IssuesCount:          result.Issues,
 		Repo:                 repoName,
 		ResolvedRepo:         repoName,
 		LastRefresh:          t,
@@ -87,20 +87,20 @@ func dolint(repoName string, forceRefresh bool) (model.LintResult, error) {
 
 	v, err := repository.GetRepo().Get(key)
 	if err != nil {
-		log.Debugf("dolint failed to getting lint result, key=%s, err=%v", key, err)
+		log.Debugf("lint failed to getting lint result, key=%s, err=%v", key, err)
 	}
 	isNewRepo = (len(v) == 0 || errors.Cause(err) == repository.ErrKeyNotFound)
 
 	// if this is a new repo, or the user force-refreshed, update the cache
 	if isNewRepo || forceRefresh {
 		if err = updateLintResult(repoName, lintResult); err != nil {
-			log.Errorf("dolint update lintResult failed key=%s, err=%v", key, err)
+			log.Errorf("lint update lintResult failed key=%s, err=%v", key, err)
 		}
-		log.Debugf("dolint updateLintResult success")
+		log.Debugf("lint updateLintResult success")
 	}
 
 	if err := updateMetadata(lintResult, repoName, isNewRepo); err != nil {
-		log.Errorf("dolint.updateMetadata failed: err=%v", err)
+		log.Errorf("lint.updateMetadata failed: err=%v", err)
 	}
 
 	return lintResult, nil
@@ -189,9 +189,9 @@ func updateRecentlyViewed(repoName string) (err error) {
 	items = append(items, recentItem{Repo: repoName})
 	if len(items) > 5 {
 		// trim recent if it's grown to over 5
-		items = (items)[1:6]
+		items = items[1:6]
 	}
-	d, err = json.Marshal(&items)
+	d, err = json.Marshal(items)
 	if err != nil {
 		return errors.Wrap(err, "updateRecentlyViewed.jsonMarshal")
 	}
@@ -255,7 +255,7 @@ func updateHighScores(result model.LintResult, repoName string) (err error) {
 	// check if we need to update the high score list
 	// only repos with 100+ files are considered for the high score list
 	// TODO: make this as configable
-	if result.Files < 10 {
+	if result.FilesCount < 10 {
 		return nil
 	}
 
@@ -291,7 +291,7 @@ func updateHighScores(result model.LintResult, repoName string) (err error) {
 	heap.Push(scores, scoreItem{
 		Repo:  repoName,
 		Score: result.Average * 100.0,
-		Files: result.Files,
+		Files: result.FilesCount,
 	})
 
 	if len(*scores) > 50 {

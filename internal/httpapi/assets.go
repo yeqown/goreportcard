@@ -14,14 +14,16 @@ import (
 // AssetsHandler handles serving static files
 func AssetsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "max-age=86400")
-
-	http.ServeFile(w, r, r.URL.Path[1:])
+	assetURI := r.URL.Path
+	http.ServeFile(w, r, assetURI[1:])
 }
 
 // FaviconHandler handles serving the favicon.ico
 func FaviconHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "assets/favicon.ico")
 }
+
+var badgeCache = sync.Map{}
 
 // BadgeHandler handles fetching the badge images
 func BadgeHandler(w http.ResponseWriter, r *http.Request, repo string) {
@@ -37,7 +39,7 @@ func BadgeHandler(w http.ResponseWriter, r *http.Request, repo string) {
 		log.Infof("Fetching badge for %q from cache...", repo)
 		grade = g.(model.Grade)
 	} else {
-		resp, err := dolint(repo, false)
+		resp, err := lint(repo, false)
 		if err != nil {
 			log.Errorf("fetching badge for %s: %v", repo, err)
 			url := "https://img.shields.io/badge/go%20report-error-lightgrey.svg?style=" + style
@@ -54,8 +56,7 @@ func BadgeHandler(w http.ResponseWriter, r *http.Request, repo string) {
 	http.ServeFile(w, r, badgePath(grade, style))
 }
 
-var badgeCache = sync.Map{}
-
 func badgePath(grade model.Grade, style string) string {
-	return fmt.Sprintf("assets/badges/%s_%s.svg", strings.ToLower(string(grade)), strings.ToLower(style))
+	return fmt.Sprintf("assets/badges/%s_%s.svg",
+		strings.ToLower(string(grade)), strings.ToLower(style))
 }

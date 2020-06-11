@@ -15,7 +15,7 @@ type ILinter interface {
 	// Name of ILinter
 	Name() string
 
-	// Description of ILinter
+	// Desc of ILinter
 	Description() string
 
 	// Weight of ILinter to calc score
@@ -67,7 +67,7 @@ func Lint(dir string) (model.ChecksResult, error) {
 
 		total += score.Percentage * score.Weight
 		totalWeight += score.Weight
-		for _, summary := range score.FileSummaries {
+		for _, summary := range score.Summaries {
 			issuesCnt += len(summary.Errors)
 		}
 	}
@@ -97,12 +97,12 @@ func execLinter(linter ILinter, chanScore chan<- model.Score) {
 
 	// send score to channel
 	score := model.Score{
-		Name:          linter.Name(),
-		Description:   linter.Description(),
-		FileSummaries: summaries,
-		Weight:        linter.Weight(),
-		Percentage:    p,
-		Error:         errMsg,
+		Name:       linter.Name(),
+		Desc:       linter.Description(),
+		Summaries:  summaries,
+		Weight:     linter.Weight(),
+		Percentage: p,
+		Error:      errMsg,
 	}
 	chanScore <- score
 }

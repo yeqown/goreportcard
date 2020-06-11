@@ -9,7 +9,7 @@ import "github.com/gojp/goreportcard/internal/model"
 // errcheck - Errcheck is a program for checking for unchecked errors in go programs.
 //         These unchecked errors can be critical bugs in some cases
 // staticcheck - Staticcheck is a go vet on steroids, applying a ton of static analysis checks
-// unused - Checks Go code for unused constants, variables, functions and types
+// unused - Scores Go code for unused constants, variables, functions and types
 // gosimple - Linter for Go source code that specializes in simplifying a code
 // structcheck - Finds unused struct fields
 // varcheck - Finds unused global variables and constants
@@ -60,7 +60,7 @@ func (g govet) Percentage() (float64, []model.FileSummary, error) {
 	return cmdHelper(g.Dir, g.Filenames, command)
 }
 
-// Description returns the description of go lint
+// Desc returns the description of go lint
 func (g govet) Description() string {
 	return `<code>go vet</code> examines Go source code and reports suspicious constructs, 
 	such as Printf calls whose arguments do not align with the format string.`
@@ -91,7 +91,7 @@ func (c errcheck) Percentage() (float64, []model.FileSummary, error) {
 	return cmdHelper(c.Dir, c.Filenames, command)
 }
 
-// Description returns the description of gofmt
+// Desc returns the description of gofmt
 func (c errcheck) Description() string {
 	return `<a href="https://github.com/kisielk/errcheck">errcheck</a> finds unchecked errors in go programs`
 }
@@ -122,7 +122,7 @@ func (g ineffassign) Percentage() (float64, []model.FileSummary, error) {
 	return cmdHelper(g.Dir, g.Filenames, command)
 }
 
-// Description returns the description of ineffassign
+// Desc returns the description of ineffassign
 func (g ineffassign) Description() string {
 	return `<a href="https://github.com/gordonklaus/ineffassign">ineffassign</a> detects ineffectual assignments in Go code.`
 }
@@ -152,7 +152,7 @@ func (g deadcode) Percentage() (float64, []model.FileSummary, error) {
 	return cmdHelper(g.Dir, g.Filenames, command)
 }
 
-// Description returns the description of go lint
+// Desc returns the description of go lint
 func (g deadcode) Description() string {
 	return `<code>go vet</code> examines Go source code and reports suspicious constructs, 
 	such as Printf calls whose arguments do not align with the format string.`
@@ -184,7 +184,7 @@ func (g gosimple) Percentage() (float64, []model.FileSummary, error) {
 	return cmdHelper(g.Dir, g.Filenames, command)
 }
 
-// Description returns the description of go lint
+// Desc returns the description of go lint
 func (g gosimple) Description() string {
 	return `<code>go vet</code> examines Go source code and reports suspicious constructs, 
 	such as Printf calls whose arguments do not align with the format string.`
@@ -216,7 +216,7 @@ func (g staticcheck) Percentage() (float64, []model.FileSummary, error) {
 	return cmdHelper(g.Dir, g.Filenames, command)
 }
 
-// Description returns the description of go lint
+// Desc returns the description of go lint
 func (g staticcheck) Description() string {
 	return `<code>go vet</code> examines Go source code and reports suspicious constructs, 
 	such as Printf calls whose arguments do not align with the format string.`
@@ -248,7 +248,7 @@ func (g structcheck) Percentage() (float64, []model.FileSummary, error) {
 	return cmdHelper(g.Dir, g.Filenames, command)
 }
 
-// Description returns the description of go lint
+// Desc returns the description of go lint
 func (g structcheck) Description() string {
 	return `<code>go vet</code> examines Go source code and reports suspicious constructs, 
 	such as Printf calls whose arguments do not align with the format string.`
@@ -280,7 +280,7 @@ func (g typecheck) Percentage() (float64, []model.FileSummary, error) {
 	return cmdHelper(g.Dir, g.Filenames, command)
 }
 
-// Description returns the description of go lint
+// Desc returns the description of go lint
 func (g typecheck) Description() string {
 	return `<code>go vet</code> examines Go source code and reports suspicious constructs, 
 	such as Printf calls whose arguments do not align with the format string.`
@@ -312,7 +312,7 @@ func (g unused) Percentage() (float64, []model.FileSummary, error) {
 	return cmdHelper(g.Dir, g.Filenames, command)
 }
 
-// Description returns the description of go lint
+// Desc returns the description of go lint
 func (g unused) Description() string {
 	return `<code>go vet</code> examines Go source code and reports suspicious constructs, 
 	such as Printf calls whose arguments do not align with the format string.`
@@ -344,7 +344,7 @@ func (g varcheck) Percentage() (float64, []model.FileSummary, error) {
 	return cmdHelper(g.Dir, g.Filenames, command)
 }
 
-// Description returns the description of go lint
+// Desc returns the description of go lint
 func (g varcheck) Description() string {
 	return `<code>go vet</code> examines Go source code and reports suspicious constructs, 
 	such as Printf calls whose arguments do not align with the format string.`

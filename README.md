@@ -15,3 +15,8 @@
 * 直接通过链接获取测试报告 （如 xxx.com/report?repo=git.medlinker.com/service/common）
 * 静态代码检查评分
 * 缓存repo的评估报告
+
+
+### 感谢
+
+* [goreportcard](https://github.com/gojp/goreportcard)

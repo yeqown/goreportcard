@@ -24,21 +24,21 @@ func (fs *FileSummary) AddError(err Error) {
 
 // Score represents the result of a single check
 type Score struct {
-	Name          string        `json:"name"`
-	Description   string        `json:"description"`
-	FileSummaries []FileSummary `json:"file_summaries"`
-	Weight        float64       `json:"weight"`
-	Percentage    float64       `json:"percentage"`
-	Error         string        `json:"error"`
+	Name       string        `json:"name"`
+	Desc       string        `json:"description"`
+	Summaries  []FileSummary `json:"file_summaries"`
+	Weight     float64       `json:"weight"`
+	Percentage float64       `json:"percentage"`
+	Error      string        `json:"error"`
 }
 
 // LintResult report structure of a lint process to some repository
 type LintResult struct {
-	Checks               []Score   `json:"checks"`
+	Scores               []Score   `json:"scores"`
 	Average              float64   `json:"average"`
 	Grade                Grade     `json:"grade"`
-	Files                int       `json:"files"`
-	Issues               int       `json:"issues"`
+	FilesCount           int       `json:"files_count"`
+	IssuesCount          int       `json:"issues"`
 	Repo                 string    `json:"repo"`
 	ResolvedRepo         string    `json:"resolvedRepo"`
 	LastRefresh          time.Time `json:"last_refresh"`
@@ -50,7 +50,7 @@ type LintResult struct {
 type ChecksResult struct {
 	Scores  []Score `json:"checks"`
 	Average float64 `json:"average"`
-	Grade   Grade   `json:"GradeFromPercentage"`
+	Grade   Grade   `json:"grade_from_percentage"`
 	Files   int     `json:"files"`
 	Issues  int     `json:"issues"`
 }
