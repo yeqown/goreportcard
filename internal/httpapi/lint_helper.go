@@ -78,8 +78,6 @@ func lint(repoName string, forceRefresh bool) (model.LintResult, error) {
 		LastRefreshHumanized: humanize.Time(t),
 	}
 
-	badgeCache.Store(repoName, result.Grade)
-
 	var (
 		isNewRepo bool // current repoName is first encounter with goreportcard
 		key       = lintResultKey(repoName)
@@ -89,7 +87,7 @@ func lint(repoName string, forceRefresh bool) (model.LintResult, error) {
 	if err != nil {
 		log.Debugf("lint failed to getting lint result, key=%s, err=%v", key, err)
 	}
-	isNewRepo = (len(v) == 0 || errors.Cause(err) == repository.ErrKeyNotFound)
+	isNewRepo = len(v) == 0 || errors.Cause(err) == repository.ErrKeyNotFound
 
 	// if this is a new repo, or the user force-refreshed, update the cache
 	if isNewRepo || forceRefresh {

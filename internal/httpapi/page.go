@@ -3,9 +3,10 @@ package httpapi
 import (
 	"container/heap"
 	"encoding/json"
-	"flag"
 	"net/http"
 	"sync"
+
+	"github.com/gojp/goreportcard/internal/model"
 
 	"github.com/gojp/goreportcard/internal/repository"
 
@@ -14,10 +15,7 @@ import (
 
 // AboutHandler handles the about page
 func AboutHandler(w http.ResponseWriter, r *http.Request) {
-	data := map[string]interface{}{
-		"google_analytics_key": googleAnalyticsKey,
-	}
-	renderHTML(w, http.StatusOK, tplAbout, data)
+	renderHTML(w, http.StatusOK, tplAbout, nil)
 }
 
 func errorHandler(w http.ResponseWriter, r *http.Request, status int) {
@@ -68,14 +66,10 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := map[string]interface{}{
-		"Recent":               recentRepos,
-		"google_analytics_key": googleAnalyticsKey,
+		"Recent": recentRepos,
 	}
 	renderHTML(w, http.StatusOK, tplHome, data)
 }
-
-var domain = flag.String("domain", "goreportcard.com", "Domain used for your goreportcard installation")
-var googleAnalyticsKey = flag.String("google_analytics_key", "UA-58936835-1", "Google Analytics Account Id")
 
 // ReportHandler handles the report page
 func ReportHandler(w http.ResponseWriter, r *http.Request, repoName string) {
@@ -101,21 +95,12 @@ func ReportHandler(w http.ResponseWriter, r *http.Request, repoName string) {
 	}
 
 	data := map[string]interface{}{
-		"repo":                 repoName,
-		"response":             string(d),
-		"loading":              needToLoad,
-		"domain":               domain,
-		"google_analytics_key": googleAnalyticsKey,
+		"repo":     repoName,
+		"response": string(d),
+		"loading":  needToLoad,
+		"domain":   model.GetConfig().Domain,
 	}
 	renderHTML(w, http.StatusOK, tplReport, data)
-}
-
-// SupportersHandler handles the supporters page
-func SupportersHandler(w http.ResponseWriter, r *http.Request) {
-	data := map[string]interface{}{
-		"google_analytics_key": googleAnalyticsKey,
-	}
-	renderHTML(w, http.StatusOK, tplSupport, data)
 }
 
 // HighScoresHandler handles the stats page
@@ -144,9 +129,8 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := map[string]interface{}{
-		"HighScores":           sortedScores,
-		"Count":                reposCount,
-		"google_analytics_key": googleAnalyticsKey,
+		"HighScores": sortedScores,
+		"Count":      reposCount,
 	}
 	renderHTML(w, http.StatusOK, tplHighscore, data)
 }

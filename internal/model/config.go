@@ -9,6 +9,7 @@ var (
 	_cfg *Config
 
 	_defaultConfig = &Config{
+		Domain:   "goreportcard.com",
 		SkipDirs: []string{},
 		RepoRoot: "_repos/src/",
 		URIFormatRules: []uriFormatRule{
@@ -20,6 +21,7 @@ var (
 	}
 )
 
+// Init load config from file
 func Init(confPath string) error {
 	_cfg = new(Config)
 
@@ -30,7 +32,9 @@ func Init(confPath string) error {
 	return nil
 }
 
+// Config type contains params to start web application
 type Config struct {
+	Domain         string          `toml:"domain"`
 	SkipDirs       []string        `toml:"skipDirs"`
 	RepoRoot       string          `toml:"repoRoot"`
 	URIFormatRules []uriFormatRule `toml:"uriFormatRules"`

@@ -57,7 +57,7 @@ func IsEmptyDir(path string) (empty bool) {
 	return cnt == 0
 }
 
-// coutnFiles under path
+// countFiles under path
 func countFiles(path string, recursive bool) (cnt int, err error) {
 	dirs := make([]string, 1, 10)
 	dirs[0] = path
@@ -74,7 +74,7 @@ func countFiles(path string, recursive bool) (cnt int, err error) {
 
 		cnt++
 
-		// TODO: maybe need to skip somefiles
+		// TODO: maybe need to skip some files
 		return nil
 	}
 

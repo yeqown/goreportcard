@@ -17,7 +17,6 @@ var (
 	tplHome      *template.Template
 	tplHighscore *template.Template
 	tplAbout     *template.Template
-	tplSupport   *template.Template
 )
 
 func loadTpls() {
@@ -41,10 +40,6 @@ func loadTpls() {
 	tplAbout = template.Must(
 		template.New("about.html").Delims("[[", "]]").
 			ParseFiles("templates/about.html", "templates/footer.html"))
-
-	tplSupport = template.Must(
-		template.New("supporters.html").Delims("[[", "]]").
-			ParseFiles("templates/supporters.html", "templates/footer.html"))
 }
 
 func Error(w http.ResponseWriter, statusCode int, err error) {

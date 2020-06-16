@@ -1,12 +1,22 @@
 package httpapi
 
+import (
+	"container/heap"
+	"sort"
+)
+
+var (
+	_ heap.Interface = &ScoreHeap{}
+	_ sort.Interface = ScoreHeap{}
+)
+
 type scoreItem struct {
 	Repo  string  `json:"repo"`
 	Score float64 `json:"score"`
 	Files int     `json:"files"`
 }
 
-// An ScoreHeap is a min-heap of ints.
+// An ScoreHeap is a min-heap of int array.
 type ScoreHeap []scoreItem
 
 func (h ScoreHeap) Len() int           { return len(h) }

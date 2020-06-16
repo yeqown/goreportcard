@@ -31,13 +31,13 @@ func startWebServer(port int) error {
 	// prometheus metrics
 	var m = newMetrics()
 
-	http.HandleFunc(m.instrument("/assets/", httpapi.AssetsHandler))
-	http.HandleFunc(m.instrument("/favicon.ico", httpapi.FaviconHandler))
+	assetsHdl := httpapi.NewAssetsHandler()
+	http.HandleFunc(m.instrument("/assets/", assetsHdl.Assets))
+	http.HandleFunc(m.instrument("/favicon.ico", assetsHdl.Favicon))
 	http.HandleFunc(m.instrument("/checks", httpapi.CheckHandler))
 	http.HandleFunc(m.instrument("/report/", httpapi.PathPatternHandler("report", httpapi.ReportHandler)))
-	http.HandleFunc(m.instrument("/badge/", httpapi.PathPatternHandler("badge", httpapi.BadgeHandler)))
+	http.HandleFunc(m.instrument("/badge/", httpapi.PathPatternHandler("badge", assetsHdl.Badge)))
 	http.HandleFunc(m.instrument("/high_scores/", httpapi.HighScoresHandler))
-	http.HandleFunc(m.instrument("/supporters/", httpapi.SupportersHandler))
 	http.HandleFunc(m.instrument("/about/", httpapi.AboutHandler))
 	http.HandleFunc(m.instrument("/", httpapi.HomeHandler))
 	// register prometheus metrics handler

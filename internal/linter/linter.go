@@ -35,11 +35,10 @@ type ILinter interface {
 func Lint(dir string) (model.ChecksResult, error) {
 	log.Debugf("Lint recv params @dir=%s", dir)
 
-	filenames, skipped, err := visitGoFiles(dir)
+	filenames, err := visitGoFiles(dir)
 	if err != nil {
 		return model.ChecksResult{}, fmt.Errorf("could not get filenames: %v", err)
 	}
-	_ = skipped
 	if len(filenames) == 0 {
 		return model.ChecksResult{}, fmt.Errorf("no .go files found")
 	}
