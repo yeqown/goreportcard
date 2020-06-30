@@ -3,13 +3,12 @@ package httpapi
 import (
 	"container/heap"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
 
 	"github.com/gojp/goreportcard/internal/linter"
-	"github.com/gojp/goreportcard/internal/model"
 	"github.com/gojp/goreportcard/internal/repository"
+	"github.com/gojp/goreportcard/internal/types"
 	vcshelper "github.com/gojp/goreportcard/internal/vcs-helper"
 
 	"github.com/dustin/go-humanize"
@@ -17,55 +16,32 @@ import (
 	"github.com/yeqown/log"
 )
 
-var (
-	downloader vcshelper.IDownloader
-)
-
-// Init linter package
-func Init() {
-	// home, _ := os.UserHomeDir()
-	// downloader = vcshelper.NewGitDownloader([]*vcshelper.SSHPrivateKeyConfig{
-	// 	{
-	// 		Host:       "github.com",
-	// 		PrivateKeyPath: filepath.Join(home, ".ssh", "id_rsa"),
-	// 		Prefix:     "git",
-	// 	},
-	// })
-
-	downloader = vcshelper.NewBuiltinToolVCS(map[string]string{
-		"github.com":        "git",
-		"git.medlinker.com": "medgit",
-	})
-
-	loadTpls()
-}
-
-// TODO: add comments, adjust logic here
-func lint(repoName string, forceRefresh bool) (model.LintResult, error) {
-	log.Debugf("lint called with repoName=%s, forceRefresh=%v", repoName, forceRefresh)
+// executing golangci-lint tool, and return result
+func doling(repoName string, forceRefresh bool) (types.LintResult, error) {
+	log.Debugf("doling called with repoName=%s, forceRefresh=%v", repoName, forceRefresh)
 	if !forceRefresh {
 		resp, err := loadLintResult(repoName)
 		if err == nil {
 			return *resp, nil
 		}
 		// just log the error and continue
-		log.Warnf("lint failed to loadLintResult, err=%v", err)
+		log.Warnf("doling failed to loadLintResult, err=%v", err)
 	}
 
 	// fetch the repoName and grade it
-	root, err := downloader.Download(repoName, model.GetConfig().RepoRoot)
+	root, err := vcshelper.GetDownloader().Download(repoName, types.GetConfig().RepoRoot)
 	if err != nil {
-		return model.LintResult{}, fmt.Errorf("could not clone repoName: %v", err)
+		return types.LintResult{}, errors.Errorf("could not clone repoName: %v", err)
 	}
-	log.Infof("lint download repoName=%s finished", repoName)
+	log.Infof("doling download repoName=%s finished", repoName)
 
 	result, err := linter.Lint(root)
 	if err != nil {
-		return model.LintResult{}, err
+		return types.LintResult{}, err
 	}
 
 	t := time.Now().UTC()
-	lintResult := model.LintResult{
+	lintResult := types.LintResult{
 		Scores:               result.Scores,
 		Average:              result.Average,
 		Grade:                result.Grade,
@@ -85,20 +61,20 @@ func lint(repoName string, forceRefresh bool) (model.LintResult, error) {
 
 	v, err := repository.GetRepo().Get(key)
 	if err != nil {
-		log.Debugf("lint failed to getting lint result, key=%s, err=%v", key, err)
+		log.Debugf("doling failed to getting lint result, key=%s, err=%v", key, err)
 	}
 	isNewRepo = len(v) == 0 || errors.Cause(err) == repository.ErrKeyNotFound
 
 	// if this is a new repo, or the user force-refreshed, update the cache
 	if isNewRepo || forceRefresh {
 		if err = updateLintResult(repoName, lintResult); err != nil {
-			log.Errorf("lint update lintResult failed key=%s, err=%v", key, err)
+			log.Errorf("doling update lintResult failed key=%s, err=%v", key, err)
 		}
-		log.Debugf("lint updateLintResult success")
+		log.Debugf("doling updateLintResult success")
 	}
 
 	if err := updateMetadata(lintResult, repoName, isNewRepo); err != nil {
-		log.Errorf("lint.updateMetadata failed: err=%v", err)
+		log.Errorf("doling.updateMetadata failed: err=%v", err)
 	}
 
 	return lintResult, nil
@@ -110,8 +86,8 @@ func lintResultKey(repoName string) []byte {
 }
 
 // loadLintResult query lintResult by repoName, if hit in DB then return,
-// otherwsie return an error.
-func loadLintResult(repoName string) (*model.LintResult, error) {
+// otherwise return an error.
+func loadLintResult(repoName string) (*types.LintResult, error) {
 	key := lintResultKey(repoName)
 	data, err := repository.GetRepo().Get(key)
 	if err != nil {
@@ -119,7 +95,7 @@ func loadLintResult(repoName string) (*model.LintResult, error) {
 	}
 
 	// TRUE: hit cache
-	resp := new(model.LintResult)
+	resp := new(types.LintResult)
 	if err = json.Unmarshal(data, resp); err != nil {
 		return nil, err
 	}
@@ -127,12 +103,12 @@ func loadLintResult(repoName string) (*model.LintResult, error) {
 	resp.LastRefresh = resp.LastRefresh.UTC()
 	resp.LastRefreshFormatted = resp.LastRefresh.Format(time.UnixDate)
 	resp.LastRefreshHumanized = humanize.Time(resp.LastRefresh.UTC())
-	resp.Grade = model.GradeFromPercentage(resp.Average * 100) // grade is not stored for some repos, yet
+	resp.Grade = types.GradeFromPercentage(resp.Average * 100) // grade is not stored for some repos, yet
 	return resp, nil
 }
 
 // updateLintResult update lintResult in DB.
-func updateLintResult(repoName string, result model.LintResult) error {
+func updateLintResult(repoName string, result types.LintResult) error {
 	data, err := json.Marshal(result)
 	if err != nil {
 		return errors.Wrap(err, "updateLintResult.jsonMarshal")
@@ -187,9 +163,9 @@ func updateRecentlyViewed(repoName string) (err error) {
 	items = append(items, recentItem{Repo: repoName})
 	if len(items) > 5 {
 		// trim recent if it's grown to over 5
-		items = items[1:6]
+		items = (items)[1:6]
 	}
-	d, err = json.Marshal(items)
+	d, err = json.Marshal(&items)
 	if err != nil {
 		return errors.Wrap(err, "updateRecentlyViewed.jsonMarshal")
 	}
@@ -244,7 +220,7 @@ func loadHighScores() (scores ScoreHeap, err error) {
 }
 
 // updateHighScores .
-func updateHighScores(result model.LintResult, repoName string) (err error) {
+func updateHighScores(result types.LintResult, repoName string) (err error) {
 	var (
 		_repo = repository.GetRepo()
 		d     []byte
@@ -357,7 +333,7 @@ func incrReposCnt(repoName string) (err error) {
 }
 
 // updateMetadata to record some data of goreportcard
-func updateMetadata(result model.LintResult, repoName string, isNewRepo bool) (err error) {
+func updateMetadata(result types.LintResult, repoName string, isNewRepo bool) (err error) {
 	// increase repos count
 	if isNewRepo {
 		if err = incrReposCnt(repoName); err != nil {

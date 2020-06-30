@@ -1,9 +1,6 @@
-FROM golang:1.12.5-alpine
+FROM golang:1.14.1-alpine
 
-RUN apk add --update --no-cache git make \
-    && go get golang.org/x/tools/go/vcs
-        
-COPY . $GOPATH/src/github.com/gojp/goreportcard
+COPY . .
 
 WORKDIR $GOPATH/src/github.com/gojp/goreportcard
 

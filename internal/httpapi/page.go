@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/gojp/goreportcard/internal/model"
+	"github.com/gojp/goreportcard/internal/types"
 
 	"github.com/gojp/goreportcard/internal/repository"
 
@@ -98,7 +98,7 @@ func ReportHandler(w http.ResponseWriter, r *http.Request, repoName string) {
 		"repo":     repoName,
 		"response": string(d),
 		"loading":  needToLoad,
-		"domain":   model.GetConfig().Domain,
+		"domain":   types.GetConfig().Domain,
 	}
 	renderHTML(w, http.StatusOK, tplReport, data)
 }

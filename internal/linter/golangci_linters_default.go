@@ -1,6 +1,6 @@
 package linter
 
-import "github.com/gojp/goreportcard/internal/model"
+import "github.com/gojp/goreportcard/internal/types"
 
 // https://golangci-lint.run/usage/linters/
 //
@@ -48,7 +48,7 @@ func (g govet) Name() string { return "govet" }
 func (g govet) Weight() float64 { return .25 }
 
 // Percentage returns the percentage of .go files that pass go vet
-func (g govet) Percentage() (float64, []model.FileSummary, error) {
+func (g govet) Percentage() (float64, []types.FileSummary, error) {
 	command := []string{
 		"golangci-lint", "run",
 		"--out-format=json",
@@ -79,7 +79,7 @@ func (c errcheck) Name() string { return "errcheck" }
 func (c errcheck) Weight() float64 { return .15 }
 
 // Percentage returns the percentage of .go files that pass gofmt
-func (c errcheck) Percentage() (float64, []model.FileSummary, error) {
+func (c errcheck) Percentage() (float64, []types.FileSummary, error) {
 	command := []string{
 		"golangci-lint", "run",
 		"--out-format=json",
@@ -110,7 +110,7 @@ func (g ineffassign) Weight() float64 { return 0.05 }
 
 // Percentage returns the percentage of .go files that pass gofmt
 // golangci-lint run --deadline=180s --disable-all --enable=ineffassign
-func (g ineffassign) Percentage() (float64, []model.FileSummary, error) {
+func (g ineffassign) Percentage() (float64, []types.FileSummary, error) {
 	command := []string{
 		"golangci-lint", "run",
 		"--out-format=json",
@@ -140,7 +140,7 @@ func (g deadcode) Name() string { return "deadcode" }
 func (g deadcode) Weight() float64 { return .25 }
 
 // Percentage returns the percentage of .go files that pass go vet
-func (g deadcode) Percentage() (float64, []model.FileSummary, error) {
+func (g deadcode) Percentage() (float64, []types.FileSummary, error) {
 	command := []string{
 		"golangci-lint", "run",
 		"--out-format=json",
@@ -172,7 +172,7 @@ func (g gosimple) Name() string { return "gosimple" }
 func (g gosimple) Weight() float64 { return .05 }
 
 // Percentage returns the percentage of .go files that pass go vet
-func (g gosimple) Percentage() (float64, []model.FileSummary, error) {
+func (g gosimple) Percentage() (float64, []types.FileSummary, error) {
 	command := []string{
 		"golangci-lint", "run",
 		"--out-format=json",
@@ -204,7 +204,7 @@ func (g staticcheck) Name() string { return "staticcheck" }
 func (g staticcheck) Weight() float64 { return .05 }
 
 // Percentage returns the percentage of .go files that pass go vet
-func (g staticcheck) Percentage() (float64, []model.FileSummary, error) {
+func (g staticcheck) Percentage() (float64, []types.FileSummary, error) {
 	command := []string{
 		"golangci-lint", "run",
 		"--out-format=json",
@@ -236,7 +236,7 @@ func (g structcheck) Name() string { return "structcheck" }
 func (g structcheck) Weight() float64 { return .05 }
 
 // Percentage returns the percentage of .go files that pass go vet
-func (g structcheck) Percentage() (float64, []model.FileSummary, error) {
+func (g structcheck) Percentage() (float64, []types.FileSummary, error) {
 	command := []string{
 		"golangci-lint", "run",
 		"--out-format=json",
@@ -268,7 +268,7 @@ func (g typecheck) Name() string { return "typecheck" }
 func (g typecheck) Weight() float64 { return .05 }
 
 // Percentage returns the percentage of .go files that pass go vet
-func (g typecheck) Percentage() (float64, []model.FileSummary, error) {
+func (g typecheck) Percentage() (float64, []types.FileSummary, error) {
 	command := []string{
 		"golangci-lint", "run",
 		"--out-format=json",
@@ -300,7 +300,7 @@ func (g unused) Name() string { return "unused" }
 func (g unused) Weight() float64 { return .05 }
 
 // Percentage returns the percentage of .go files that pass go vet
-func (g unused) Percentage() (float64, []model.FileSummary, error) {
+func (g unused) Percentage() (float64, []types.FileSummary, error) {
 	command := []string{
 		"golangci-lint", "run",
 		"--out-format=json",
@@ -332,7 +332,7 @@ func (g varcheck) Name() string { return "varcheck" }
 func (g varcheck) Weight() float64 { return .05 }
 
 // Percentage returns the percentage of .go files that pass go vet
-func (g varcheck) Percentage() (float64, []model.FileSummary, error) {
+func (g varcheck) Percentage() (float64, []types.FileSummary, error) {
 	command := []string{
 		"golangci-lint", "run",
 		"--out-format=json",

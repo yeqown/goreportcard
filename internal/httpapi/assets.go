@@ -6,8 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/gojp/goreportcard/internal/model"
-
+	"github.com/gojp/goreportcard/internal/types"
 	"github.com/yeqown/log"
 )
 
@@ -46,12 +45,12 @@ func (hdl *assetsHandler) Badge(w http.ResponseWriter, req *http.Request, repo s
 		log.Infof("Fetching badge for %q from cache...", repo)
 
 		w.Header().Set("Cache-control", "no-store, no-badgeCache, must-revalidate")
-		http.ServeFile(w, req, badgePath(g.(model.Grade), style))
+		http.ServeFile(w, req, badgePath(g.(types.Grade), style))
 		return
 	}
 
 	// not found in cache, then reload from lint
-	r, err := lint(repo, false)
+	r, err := doling(repo, false)
 	if err != nil {
 		log.Errorf("fetching badge for %s: %v", repo, err)
 		url := "https://img.shields.io/badge/go%20report-error-lightgrey.svg?style=" + style
@@ -66,7 +65,7 @@ func (hdl *assetsHandler) Badge(w http.ResponseWriter, req *http.Request, repo s
 	http.ServeFile(w, req, badgePath(r.Grade, style))
 }
 
-func badgePath(grade model.Grade, style string) string {
+func badgePath(grade types.Grade, style string) string {
 	return fmt.Sprintf("assets/badges/%s_%s.svg",
 		strings.ToLower(string(grade)), strings.ToLower(style))
 }

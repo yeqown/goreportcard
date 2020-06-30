@@ -19,6 +19,10 @@ var (
 	tplAbout     *template.Template
 )
 
+func init() {
+	loadTpls()
+}
+
 func loadTpls() {
 	tpl404 = template.Must(
 		template.New("404.html").

@@ -12,9 +12,8 @@ const (
 	RepoPrefix string = "repos-"
 )
 
-// CheckHandler handles the request for checking a repo
-// TODO: rename as LintHandler
-func CheckHandler(w http.ResponseWriter, r *http.Request) {
+// LintHandler handles the request for checking a repo
+func LintHandler(w http.ResponseWriter, r *http.Request) {
 	repo := r.FormValue("repo")
 	// TODO: valid repo format "github.com/xxx/xxx"
 	log.Infof("Checking repo %q...", repo)
@@ -22,9 +21,9 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	// if this is a GET request, try to fetch from cached version in badger first
 	forceRefresh := r.Method != "GET"
 
-	_, err := lint(repo, forceRefresh)
+	_, err := doling(repo, forceRefresh)
 	if err != nil {
-		log.Errorf("lint failed, err=%v", err)
+		log.Errorf("doling failed, err=%v", err)
 		Error(w, http.StatusBadRequest, errors.Wrap(err, "Could not analyze the repository"))
 		return
 	}

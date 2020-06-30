@@ -2,29 +2,45 @@ package repository
 
 import "github.com/pkg/errors"
 
-// IRepository KV DB operator
+// IRepository .
 type IRepository interface {
-	// Get value with key
 	Get(key []byte) ([]byte, error)
 
-	// Set value with key
 	Update(key, value []byte) error
 
-	// Close DB connection
 	Close()
 }
 
+// DBType .
+type DBType uint8
+
+const (
+	Unknown DBType = iota // unknown
+	Redis                 // redis
+	Badger                // badger
+)
+
 var (
+	// _repo instance of IRepository
 	_repo IRepository
 
 	// ErrKeyNotFound .
 	ErrKeyNotFound = errors.New("key not found")
 )
 
-// Init .
-func Init() (err error) {
-	_repo, err = NewBadgerRepo("./.badger")
-	//_repo, err = NewRedisRepo()
+// Init with specify DB type
+func Init(db DBType) (err error) {
+	switch db {
+	case Redis:
+		_repo, err = NewRedisRepo()
+	case Badger:
+		_repo, err = NewBadgerRepo("./.badger")
+	case Unknown:
+		fallthrough
+	default:
+		_repo, err = NewBadgerRepo("./.badger")
+	}
+
 	if err != nil {
 		return err
 	}

@@ -19,14 +19,14 @@ type builtinToolVCS struct {
 }
 
 // NewBuiltinToolVCS .
-func NewBuiltinToolVCS(cfgs map[string]string) IDownloader {
+func NewBuiltinToolVCS(cfgs []*VCSOption) IDownloader {
 	downloader := builtinToolVCS{
 		Cmd:         vcs.ByCmd("git"),
 		gitPrefixes: make(map[string]string, 4),
 	}
 
-	for k, v := range cfgs {
-		downloader.gitPrefixes[k] = v
+	for _, v := range cfgs {
+		downloader.gitPrefixes[v.Host] = v.Prefix
 	}
 
 	return downloader

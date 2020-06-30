@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gojp/goreportcard/internal/model"
+	"github.com/gojp/goreportcard/internal/types"
 )
 
 // func TestGoFiles(t *testing.T) {
@@ -29,10 +29,10 @@ var goToolTests = []struct {
 	filenames []string
 	tool      []string
 	percent   float64
-	failed    []model.FileSummary
+	failed    []types.FileSummary
 	wantErr   bool
 }{
-	{"go vet", "testfiles/", []string{"testfiles/a.go", "testfiles/b.go", "testfiles/c.go"}, []string{"go", "tool", "vet"}, 1, []model.FileSummary{}, false},
+	{"go vet", "testfiles/", []string{"testfiles/a.go", "testfiles/b.go", "testfiles/c.go"}, []string{"go", "tool", "vet"}, 1, []types.FileSummary{}, false},
 }
 
 func TestGoTool(t *testing.T) {

@@ -15,13 +15,6 @@ import (
 	"github.com/yeqown/log"
 )
 
-// SSHPrivateKeyConfig ssh clone public key config
-type SSHPrivateKeyConfig struct {
-	Host           string // host of git server
-	PrivateKeyPath string // private key pem path
-	Prefix         string // prefix of git server. refer prefix@host:owner/repoName
-}
-
 // gitDownloader to clone repo withs git ssh request
 type gitDownloader struct {
 	publicKeys  map[string]*gitssh.PublicKeys // map[host]gitssh.publickeys
@@ -29,7 +22,7 @@ type gitDownloader struct {
 }
 
 // NewGitDownloader with ssh configs
-func NewGitDownloader(cfgs []*SSHPrivateKeyConfig) IDownloader {
+func NewGitDownloader(cfgs []*VCSOption) IDownloader {
 	gitd := gitDownloader{
 		publicKeys:  make(map[string]*gitssh.PublicKeys),
 		gitPrefixes: make(map[string]string),
@@ -50,7 +43,9 @@ func NewGitDownloader(cfgs []*SSHPrivateKeyConfig) IDownloader {
 			continue
 		}
 
-		auth, err := gitssh.NewPublicKeys("git", []byte(pemBytes), "")
+		// Note: username should be PREFIX of ssh clone URL
+		// PREFIX@github.com:OWNER/PROJECT
+		auth, err := gitssh.NewPublicKeys(v.Prefix, []byte(pemBytes), "")
 		if err != nil {
 			log.Errorf("NewGitDownloader failed to NewPublicKeys, err=%v", err)
 			continue

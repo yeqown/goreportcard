@@ -4,13 +4,18 @@ import (
 	"log"
 	"os"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 func main() {
 	app := cli.NewApp()
 
-	app.Author = "yeqown@gmail.com"
+	app.Authors = []*cli.Author{
+		{
+			Name:  "yeqown",
+			Email: "yeqown@gmail.com",
+		},
+	}
 	app.Copyright = "2020@yeqown"
 
 	mountCommands(app)

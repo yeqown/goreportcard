@@ -13,8 +13,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/gojp/goreportcard/internal/model"
-
+	"github.com/gojp/goreportcard/internal/types"
 	"github.com/pkg/errors"
 	"github.com/yeqown/log"
 )
@@ -75,7 +74,7 @@ func lineCount(filename string) (int, error) {
 	// `wc -l` output is like: 999 filename.go
 	count, err := strconv.Atoi(strings.Split(strings.TrimSpace(string(out)), " ")[0])
 	if err != nil {
-		return 0, fmt.Errorf("could not count lines: %v", err)
+		return 0, errors.Errorf("could not count lines: %v", err)
 	}
 
 	return count, nil
@@ -110,11 +109,11 @@ func isGenerated(fp string) bool {
 
 // assembleRemoteFileURI with repoDir, branchName and relativePathToFile
 func assembleRemoteFileURI(dir, relativePath string) (URI string) {
-	root := strings.TrimPrefix(dir, model.GetConfig().RepoRoot)
+	root := strings.TrimPrefix(dir, types.GetConfig().RepoRoot)
 	branchName := "master"
 	// default means, https://HOST/blob/BRANCH_NAME/PATH_TO_FILE
 	uriFmt := "https://%s/blob/%s/%s"
-	for _, rule := range model.GetConfig().URIFormatRules {
+	for _, rule := range types.GetConfig().URIFormatRules {
 		if strings.HasPrefix(root, rule.Prefix) {
 			uriFmt = rule.URIFormat
 		}
@@ -160,15 +159,15 @@ type golangciLintOutput struct {
 	Issues []issue
 }
 
-// parseGolangciLintInJSON parse json output into model.FileSummary
-func parseGolangciLintInJSON(data []byte, dir string) ([]model.FileSummary, error) {
+// parseGolangciLintInJSON parse json output into types.FileSummary
+func parseGolangciLintInJSON(data []byte, dir string) ([]types.FileSummary, error) {
 	output := new(golangciLintOutput)
 	if err := json.Unmarshal(data, output); err != nil {
 		return nil, errors.Wrap(err, "parseGolangciLintInJSON.jsonUnmarshal")
 	}
 
 	// log.Debugf("parseGolangciLintInJSON got result=%s, output=%+v", data, output)
-	m := make(map[string]*model.FileSummary, 64)
+	m := make(map[string]*types.FileSummary, 64)
 	for _, issue := range output.Issues {
 		if !strings.HasSuffix(issue.Pos.Filename, ".go") {
 			// true: if not valid filename
@@ -186,26 +185,26 @@ func parseGolangciLintInJSON(data []byte, dir string) ([]model.FileSummary, erro
 		}
 
 		var (
-			summary *model.FileSummary
+			summary *types.FileSummary
 			ok      bool
 		)
 		if summary, ok = m[issue.Pos.Filename]; !ok {
 			// summary of `filename` with error not exists, then initialize the one
-			summary = &model.FileSummary{
+			summary = &types.FileSummary{
 				Filename: issue.Pos.Filename,
 				FileURL:  assembleRemoteFileURI(dir, issue.Pos.Filename),
 			}
 		}
 
 		// TODO: add more message to Error and show them out
-		summary.AddError(model.Error{
+		summary.AddError(types.Error{
 			LineNumber:  issue.Pos.Line,
 			ErrorString: issue.Text,
 		})
 		m[summary.Filename] = summary
 	}
 
-	summaries := make([]model.FileSummary, len(m))
+	summaries := make([]types.FileSummary, len(m))
 	for _, v := range m {
 		summaries = append(summaries, *v)
 	}
@@ -215,7 +214,7 @@ func parseGolangciLintInJSON(data []byte, dir string) ([]model.FileSummary, erro
 
 // cmdHelper runs a given go command (for example gofmt, go tool vet)
 // on a directory
-func cmdHelper(dir string, filenames, command []string) (float64, []model.FileSummary, error) {
+func cmdHelper(dir string, filenames, command []string) (float64, []types.FileSummary, error) {
 	params := command[1:]
 	params = append(params, "./...")
 
@@ -270,7 +269,7 @@ func cmdHelper(dir string, filenames, command []string) (float64, []model.FileSu
 // 1. get all stdout
 // 2. judge cmd status, error to return
 // 3. else to parse error output
-func scanAndWait(r io.ReadCloser, cmd *exec.Cmd, dir string) ([]model.FileSummary, error) {
+func scanAndWait(r io.ReadCloser, cmd *exec.Cmd, dir string) ([]types.FileSummary, error) {
 	scanner := bufio.NewScanner(r)
 	buf := bytes.NewBuffer(nil)
 
