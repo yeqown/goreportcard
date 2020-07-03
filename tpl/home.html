@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Go Report Card | Go project code quality report cards</title>
+    <link rel="stylesheet" href="/assets/css/bulma.min.css">
+</head>
+<body>
+[[ template "header" . ]]
+
+<section class="hero is-light is-medium has-text-centered">
+    <div class="hero-body">
+        <div class="container">
+            <div class="content">
+                <p>Enter the <strong>go get</strong><code>github.com/yeqown/goreportcard</code>
+                    path to the project below:</p>
+            </div>
+
+            <form method="POST" action="/checks" id="check_form">
+                <div class="container subtitle">
+                    <p class="url">
+                        <input name="repo" type="text" class="input is-medium"
+                               placeholder="github.com/yeqown/goreportcard"/>
+                    </p>
+                </div>
+                <div>
+                    <button type="submit" class="button is-medium is-primary" href="#" role="button">
+                        Generate
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+<section class="section container-suggestions">
+    <div class="container">
+        <h3 class="subtitle">Recently Generated</h3>
+
+        <table class="table content is-fullwidth">
+            <thead>
+            <tr>
+                <th> Project name </th>
+                <th> Score </th>
+                <th> Grade </th>
+                <th> Last generate time </th>
+            </tr>
+            </thead>
+            <tbody>
+            [[ range .Recent ]]
+            <tr>
+                <td class="table-link"><a href="/report/[[ .Repo ]]">[[ .Repo ]]</td>
+                <td class="table-link">[[ .Score ]]</td>
+                <td class="table-link">[[ .Grade ]]</td>
+                <td class="table-link">[[ .LastGeneratedTime ]]</td>
+            </tr>
+            [[ end ]]
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="section container-results hidden">
+    <div class="container">
+        <div class="columns results-text">
+        </div>
+        <div class="columns">
+            <div class="column is-quarter">
+                <nav class="menu results">
+                </nav>
+                <div class="container-update">
+                </div>
+            </div>
+            <div class="column">
+                <div class="results-details">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+[[ template "footer" . ]]
+
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"
+        integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.min.js"
+        integrity="sha256-+JMHsXRyeTsws/tzbIh5YHQxRdKCuNjmvNcTFtY6DLc=" crossorigin="anonymous"></script>
+<script id="template-alert" type="text/x-handlebars-template">
+    <div class="notification is-warning">
+        <button class="delete"></button>
+        {{{message}}}
+    </div>
+    </div>
+</script>
+<script type="text/javascript" src="/assets/js/home.js"></script>
+</body>
+</html>

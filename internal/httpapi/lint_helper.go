@@ -123,7 +123,10 @@ func updateLintResult(repoName string, result types.LintResult) error {
 }
 
 type recentItem struct {
-	Repo string
+	Repo              string
+	Grade             string
+	Score             float64
+	LastGeneratedTime time.Time
 }
 
 var (
@@ -133,7 +136,7 @@ var (
 )
 
 // updateRecentlyViewed .
-func updateRecentlyViewed(repoName string) (err error) {
+func updateRecentlyViewed(item recentItem) (err error) {
 	var (
 		items []recentItem
 		_repo = repository.GetRepo()
@@ -154,13 +157,13 @@ func updateRecentlyViewed(repoName string) (err error) {
 
 	// add it to the slice, if it is not in there already
 	for _, v := range items {
-		if v.Repo == repoName {
-			log.Infof("updateRecentlyViewed has exists repoName=%s, so skipped", repoName)
+		if v.Repo == item.Repo {
+			log.Infof("updateRecentlyViewed has exists repoName=%s, so skipped", item.Repo)
 			return
 		}
 	}
 
-	items = append(items, recentItem{Repo: repoName})
+	items = append(items, item)
 	if len(items) > 5 {
 		// trim recent if it's grown to over 5
 		items = (items)[1:6]
@@ -289,8 +292,10 @@ func loadReposCount() (cnt int, err error) {
 	)
 
 	d, err = _repo.Get(_reposCntKey)
-	if err != nil && errors.Cause(err) != repository.ErrKeyNotFound {
-		return
+	if err != nil {
+		if errors.Cause(err) == repository.ErrKeyNotFound {
+			return cnt, nil
+		}
 	}
 
 	if err = json.Unmarshal(d, &cnt); err != nil {
@@ -340,7 +345,13 @@ func updateMetadata(result types.LintResult, repoName string, isNewRepo bool) (e
 			log.Errorf("updateMetadata.incrReposCnt failed: err=%v", err)
 		}
 	}
-	if err = updateRecentlyViewed(repoName); err != nil {
+	item := recentItem{
+		Repo:              repoName,
+		Grade:             string(result.Grade),
+		Score:             result.Average,
+		LastGeneratedTime: result.LastRefresh,
+	}
+	if err = updateRecentlyViewed(item); err != nil {
 		log.Errorf("updateMetadata.updateRecentlyViewed failed: err=%v", err)
 	}
 	if err = updateHighScores(result, repoName); err != nil {

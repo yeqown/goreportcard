@@ -1,0 +1,143 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Go Report Card | Go project code quality report cards</title>
+    <link rel="stylesheet" href="/assets/css/bulma.min.css">
+</head>
+<body>
+[[ template "header" . ]]
+
+<section class="section container-loading">
+    <div class="container loading">
+        <div class="columns">
+            <div class="column has-text-centered">
+                <h3 class="subtitle">Preparing report...</h3>
+                <button class="button is-loading is-large" style="border: none;">
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section container-results [[if .loading]]hidden[[end]]">
+    <div class="container">
+        <div class="columns results-text">
+        </div>
+        <div class="columns">
+            <div class="column is-one-quarter">
+                <nav class="panel results">
+                </nav>
+                <div class="container-update">
+                </div>
+            </div>
+            <div class="column">
+                <div class="results-details">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+[[ template "footer" . ]]
+
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"
+        integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.min.js"
+        integrity="sha256-+JMHsXRyeTsws/tzbIh5YHQxRdKCuNjmvNcTFtY6DLc=" crossorigin="anonymous"></script>
+<script id="template-alert" type="text/x-handlebars-template">
+    <div class="notification is-warning">
+        <button class="delete"></button>
+        {{{message}}}
+    </div>
+    </div>
+</script>
+
+<script id="template-grade" type="text/x-handlebars-template">
+    <div class="column">
+        <h1 class="subtitle">Report for {{#if link}}<a href="{{ link }}">{{/if}}<strong>{{repo}}</strong>{{#if link}}
+            </a>{{/if}}</h1>
+        <div class="notification is-primay">
+            {{grade}} {{gradeMessage grade}}
+            Found {{issues}} issues across {{files_count}} files
+        </div>
+    </div>
+    <div class="column is-one-quarter badge-col">
+        <img class="badge" tag="{{repo}}" src="/badge/{{repo}}"/>
+    </div>
+</script>
+
+<script id="template-check" type="text/x-handlebars-template">
+    <a class="panel-block" href="#{{{name}}}">
+        <div class="level">
+            <span class="level-left">{{name}}</span>
+            <span class="level-right {{color percentage}} is-small">{{percentage}}%</span>
+        </div>
+    </a>
+</script>
+
+<script id="template-badgedropdown" type="text/x-handlebars-template">
+    <div id="badge_dropdown" class="hidden">
+        <br>
+        <div style="margin-bottom:.5em">
+            <span class="tag" style="width:80px">URL</span> <input value="{{{image_url}}}">
+        </div>
+        <div class="content">
+            <span class="tag" style="width:80px">Markdown</span> <input value="[![Go Report Card]({{{image_url}}})]({{{url}}})"></input>
+        </div>
+    </div>
+</script>
+
+<script id="template-details" type="text/x-handlebars-template">
+    <div class="content">
+        <h2 class="subtile">{{{name}}} - <span class="percentage {{color percentage}}">{{percentage}}%</span></h2>
+        <p class="content">{{{description}}}</p>
+
+        {{#if error}}
+        <p class="notification">An error occurred while running this test ({{error}})</p>
+        {{else}}
+        {{^file_summaries}}
+        <p class="perfect">No problems detected. Good job!</p>
+        {{/file_summaries}}
+        {{#each file_summaries}}
+            {{#if filename}}
+            <ul id="files" >
+                <li id="file">
+                    <ul id="errors">
+                        <a href="{{this.file_url}}">{{this.filename}}</a>
+                        {{#each this.errors}}
+                        {{#if line_number}}
+                        <li class="error">
+                            <a href="{{../file_url}}#L{{this.line_number}}">Line {{this.line_number}}</a>: {{this.error_string}}
+                        </li>
+                        {{/if}}
+                        {{/each}}
+                    </ul>
+                </li>
+            </ul>
+            {{/if}}
+        {{/each}}
+        {{/if}}
+    </div>
+    <hr>
+</script>
+
+<script id="template-lastrefresh" type="text/x-handlebars-template">
+    <div title="{{formatted_last_refresh}}">
+        Last refresh:
+        <time datetime="{{last_refresh}}">{{humanized_last_refresh}}</time>
+    </div>
+    <br>
+    <p><a class="refresh-button button is-primary" href="">Refresh now</a></p>
+</script>
+
+<script>
+  var loading = [[if .loading]] true [[ else ]] false [[end]];
+  var response = [[if .loading]] false [[else]] [[.response]] [[end]];
+  var domain = [[if .loading]] false [[else]] [[.domain]] [[end]];
+</script>
+<script type="text/javascript" src="/assets/js/report.js"></script>
+
+</body>
+</html>

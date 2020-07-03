@@ -16,3 +16,6 @@ test:
 start:
 	go run ./cmd/goreportcard-cli/ start-web
 
+run: build
+	./goreportcard-cli start-web
+
