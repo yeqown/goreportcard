@@ -37,6 +37,10 @@
                 </div>
             </div>
         </div>
+
+        <form method="POST" action="/checks" id="check_form" style="display:none">
+            <input name="repo" type="text" class="input-box" value="[[ .repo ]]" placeholder="[[ .repo ]]"/>
+        </form>
     </div>
 </section>
 
@@ -50,7 +54,6 @@
     <div class="notification is-warning">
         <button class="delete"></button>
         {{{message}}}
-    </div>
     </div>
 </script>
 

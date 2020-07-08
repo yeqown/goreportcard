@@ -118,14 +118,17 @@ var loadData = function(getRequest){
       url = $form.attr("action"),
       method = $form.attr("method"),
       data = {};
-    $form.serializeArray().map(function(x){data[x.name] = x.value;});
 
-    if(!data["repo"]) {
-        alertMessage("Input cannot be empty. Please enter a valid repository path");
-        return false;
-    }
+  $form.serializeArray().map(function(x){data[x.name] = x.value;});
 
-    $("#check_form .button").addClass("is-loading");
+  // console.log("data.....", $(this), data)
+  if(!data["repo"]) {
+    alertMessage("Input cannot be empty. Please enter a valid repository path");
+    return false;
+  }
+
+  // $("#check_form .button").addClass("is-loading");
+
   $.ajax({
       type: getRequest ? "GET" : "POST",
       url: url,
