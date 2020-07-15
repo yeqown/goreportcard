@@ -6,9 +6,8 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/gojp/goreportcard/internal/types"
-
 	"github.com/gojp/goreportcard/internal/repository"
+	"github.com/gojp/goreportcard/internal/types"
 
 	"github.com/yeqown/log"
 )
@@ -32,7 +31,6 @@ var cache struct {
 }
 
 // HomeHandler handles the homepage
-// TODO: To optimize the handler logic
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path[1:] != "" {
 		errorHandler(w, r, http.StatusNotFound)

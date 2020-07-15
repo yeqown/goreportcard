@@ -16,3 +16,5 @@ test:
 start:
 	go run ./cmd/goreportcard-cli/ start-web
 
+docker:
+	docker built -t

@@ -233,9 +233,7 @@ func updateHighScores(result types.LintResult, repoName string) (err error) {
 		return nil
 	}
 
-	if d, err = _repo.Get(_scoreKey); err != nil &&
-		errors.Cause(err) != repository.ErrKeyNotFound {
-
+	if d, err = _repo.Get(_scoreKey); err != nil {
 		return
 	}
 
@@ -289,12 +287,16 @@ func loadReposCount() (cnt int, err error) {
 	)
 
 	d, err = _repo.Get(_reposCntKey)
-	if err != nil && errors.Cause(err) != repository.ErrKeyNotFound {
+	if err != nil {
+		if errors.Cause(err) == repository.ErrKeyNotFound {
+			return cnt, nil
+		}
+		err = errors.Wrap(err, "loadReposCount.repoGet")
+
 		return
 	}
 
 	if err = json.Unmarshal(d, &cnt); err != nil {
-
 		return
 	}
 	return
