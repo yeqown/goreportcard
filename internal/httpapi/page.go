@@ -3,12 +3,14 @@ package httpapi
 import (
 	"container/heap"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sync"
 
 	"github.com/gojp/goreportcard/internal/repository"
 	"github.com/gojp/goreportcard/internal/types"
 
+	"github.com/dustin/go-humanize"
 	"github.com/yeqown/log"
 )
 
@@ -25,9 +27,16 @@ func errorHandler(w http.ResponseWriter, r *http.Request, status int) {
 }
 
 var cache struct {
-	items []string
+	items []recentRepo
 	mux   sync.Mutex
 	count int
+}
+
+type recentRepo struct {
+	Repo              string
+	Grade             string
+	Score             string
+	LastGeneratedTime string
 }
 
 // HomeHandler handles the homepage
@@ -37,7 +46,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var recentRepos []string
+	var recentRepos []recentRepo
 
 	cache.mux.Lock()
 	cache.count++
@@ -52,10 +61,15 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 			log.Warnf("HomeHandler failed to loadRecentlyViewed, err=%v", err)
 		}
 
-		recentRepos = make([]string, len(items))
+		recentRepos = make([]recentRepo, len(items))
 		var j = len(items) - 1
-		for _, r := range items {
-			recentRepos[j] = r.Repo
+		for _, v := range items {
+			recentRepos[j] = recentRepo{
+				Repo:              v.Repo,
+				Grade:             v.Grade,
+				Score:             fmt.Sprintf("%.2f", v.Score*100),
+				LastGeneratedTime: humanize.Time(v.LastGeneratedTime),
+			}
 			j--
 		}
 

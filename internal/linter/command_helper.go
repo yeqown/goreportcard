@@ -244,6 +244,7 @@ func cmdHelper(dir string, filenames, command []string) (float64, []types.FileSu
 		return 0, nil, err
 	}
 
+	log.Debugf("one cmd=%s finished", cmd.String())
 	// TRUE: sif only 1 file, so calc socre = sum(error line) / sum(line)
 	if len(filenames) == 1 {
 		lc, err := lineCount(filenames[0])

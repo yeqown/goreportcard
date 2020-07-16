@@ -69,7 +69,7 @@ func getCliCheckCommand() *cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			return cliCheck(dir, verbose)
+			return runCli(dir, verbose)
 		},
 	}
 }

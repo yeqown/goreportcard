@@ -46,7 +46,7 @@ func (br badgerRepo) Get(key []byte) (out []byte, err error) {
 		return nil, errors.Wrap(err, "badgerRepo.Get key="+string(key))
 	}
 
-	log.Debugf("badgerRepo.Get(key=%s) v=%s", key, out)
+	// log.Debugf("badgerRepo.Get(key=%s) v=%s", key, out)
 	return out, nil
 }
 

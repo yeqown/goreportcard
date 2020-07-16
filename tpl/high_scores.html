@@ -1,0 +1,51 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Go Report Card | Go project code quality report cards</title>
+    <link rel="stylesheet" href="/assets/css/bulma.min.css">
+    <style>
+    .header .is-active {
+        font-weight: bold;
+    }
+
+    </style>
+</head>
+<body>
+[[ template "header" . ]]
+
+<section class="section">
+    <div class="container">
+        <h1 class="subtitle">Top Scores Project</h1>
+        <table class="table is-fullwidth">
+            <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Project Name</th>
+                <th>Go Files Count</th>
+                <th>Score</th>
+            </tr>
+            </thead>
+            <tbody>
+            [[ range $index, $highScore := .HighScores ]]
+            <tr>
+                <td><a class="has-text-primary" href="/report/[[ $highScore.Repo]]">[[ add $index 1 ]]</td>
+                </a>
+                <td><a class="has-text-primary" href="https://[[ $highScore.Repo ]]" rel="nofollow">[[ $highScore.Repo ]]</a></td>
+                <td>[[ $highScore.Files ]]</td>
+                <td>[[ formatScore $highScore.Score ]]</td>
+            </tr>
+            [[end]]
+            </tbody>
+        </table>
+        <hr>
+        <p>
+            Reports generated for <strong>[[ .Count ]]</strong> unique repos so far.
+        </p>
+    </div>
+</section>
+[[ template "footer" . ]]
+</body>
+</html>

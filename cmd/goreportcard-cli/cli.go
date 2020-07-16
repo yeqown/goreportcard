@@ -8,7 +8,7 @@ import (
 	"github.com/yeqown/log"
 )
 
-func cliCheck(dir string, verbose bool) error {
+func runCli(dir string, verbose bool) error {
 	log.SetLogLevel(log.LevelError)
 
 	r, err := linter.Lint(dir)

@@ -26,24 +26,24 @@ func init() {
 func loadTpls() {
 	tpl404 = template.Must(
 		template.New("404.html").
-			ParseFiles("templates/404.html", "templates/footer.html"))
+			ParseFiles("tpl/404.html", "tpl/footer.html", "tpl/header.html"))
 
 	tplReport = template.Must(
 		template.New("report.html").Delims("[[", "]]").
-			ParseFiles("templates/report.html", "templates/footer.html"))
+			ParseFiles("tpl/report.html", "tpl/footer.html", "tpl/header.html"))
 
 	tplHome = template.Must(
 		template.New("home.html").Delims("[[", "]]").
-			ParseFiles("templates/home.html", "templates/footer.html"))
+			ParseFiles("tpl/home.html", "tpl/footer.html", "tpl/header.html"))
 
 	funcs := template.FuncMap{"add": add, "formatScore": formatScore}
 	tplHighscore = template.Must(
 		template.New("high_scores.html").Delims("[[", "]]").Funcs(funcs).
-			ParseFiles("templates/high_scores.html", "templates/footer.html"))
+			ParseFiles("tpl/high_scores.html", "tpl/footer.html", "tpl/header.html"))
 
 	tplAbout = template.Must(
 		template.New("about.html").Delims("[[", "]]").
-			ParseFiles("templates/about.html", "templates/footer.html"))
+			ParseFiles("tpl/about.html", "tpl/footer.html", "tpl/header.html"))
 }
 
 func Error(w http.ResponseWriter, statusCode int, err error) {

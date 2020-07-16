@@ -19,4 +19,4 @@
 
 ### 感谢
 
-* [goreportcard](https://github.com/gojp/goreportcard)
+* [goreportcard](https://github.com/yeqown/goreportcard)
