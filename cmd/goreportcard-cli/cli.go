@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
+
 	"github.com/gojp/goreportcard/internal/linter"
 
 	"github.com/yeqown/log"
@@ -14,7 +16,7 @@ func runCli(dir string, verbose bool) error {
 	r, err := linter.Lint(dir)
 	if err != nil {
 		log.Errorf("Fatal error checking %s: %s", dir, err.Error())
-		return err
+		return errors.Wrapf(err, "Fatal error checking: [%s]", dir)
 	}
 
 	fmt.Printf("Grade: %s (%.1f%%)\n", r.Grade, r.Average*100)
