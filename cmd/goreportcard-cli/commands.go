@@ -21,7 +21,7 @@ func mountCommands(app *cli.App) {
 
 func getStartServerCommand() *cli.Command {
 	home, _ := os.UserHomeDir()
-	confPath := filepath.Join(home, ".goreportcard.toml")
+	confPath := filepath.Join(home, "goreportcard.toml")
 
 	return &cli.Command{
 		Name:  "start-web",
@@ -29,7 +29,7 @@ func getStartServerCommand() *cli.Command {
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "conf",
-				Usage:       "specify a path to config, default is ~/.goreportcard.toml",
+				Usage:       "specify a path to config, default is ~/goreportcard.toml",
 				Value:       confPath,
 				Destination: &confPath,
 			},

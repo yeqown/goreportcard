@@ -37,3 +37,5 @@ git_downloader_up_test.go
 .idea/
 
 docker-compose.yaml
+
+fakehome/

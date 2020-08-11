@@ -13,7 +13,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829
 	github.com/urfave/cli/v2 v2.2.0
-	github.com/yeqown/log v0.0.0-20200108034421-d68941cd8fd3
+	github.com/yeqown/log v1.0.3
 	golang.org/x/tools v0.0.0-20200604183345-4d5ea46c79fe
 	google.golang.org/protobuf v1.25.0 // indirect
 )

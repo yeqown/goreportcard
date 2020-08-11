@@ -72,10 +72,14 @@
 </script>
 
 <script id="template-check" type="text/x-handlebars-template">
-    <a class="panel-block" href="#{{{name}}}">
-        <div class="level">
-            <span class="level-left">{{name}}</span>
-            <span class="level-right {{color percentage}} is-small">{{percentage}}%</span>
+    <a class="panel-block" href="#{{name}}" name="{{name}}">
+        <div class="level" style="width:100%">
+            <div class="level-left">
+                <span class="level-item">{{name}}</span>
+            </div>
+            <div class="level-right">
+                <span class="level-item {{color percentage}} is-small">{{percentage}}%</span>
+            </div>
         </div>
     </a>
 </script>
@@ -94,7 +98,15 @@
 
 <script id="template-details" type="text/x-handlebars-template">
     <div class="content">
-        <h2 class="subtile">{{{name}}} - <span class="percentage {{color percentage}}">{{percentage}}%</span></h2>
+        <div class="level">
+            <div class="level-left">
+                <h2 class="subtile">{{{name}}}</h2>
+            </div>
+            <div class="level-right">
+                <h2 class="percentage {{color percentage}}">{{percentage}}%</h2>
+            </div>
+        </div>
+
         <p class="content">{{{description}}}</p>
 
         {{#if error}}

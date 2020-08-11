@@ -12,12 +12,11 @@ import (
 )
 
 var (
-	_cfg *Config
-
+	_cfg           *Config
 	_defaultConfig = &Config{
 		Port: 8000,
 		DB:   repository.Badger,
-		VCS:  vcshelper.GoGit,
+		VCS:  vcshelper.BuiltinTool,
 		VCSOptions: []*vcshelper.VCSOption{
 			{
 				Host:           "github.com",
@@ -25,7 +24,7 @@ var (
 				PrivateKeyPath: genPrivateKeyPath(),
 			},
 		},
-		RepoRoot: "_repos/src/",
+		RepoRoot: "goreportcard-repos/",
 		Domain:   "http://localhost:8000",
 		SkipDirs: []string{},
 		URIFormatRules: []uriFormatRule{
@@ -36,6 +35,11 @@ var (
 		},
 	}
 )
+
+func init() {
+	home, _ := os.UserHomeDir()
+	_defaultConfig.RepoRoot = filepath.Join(home, _defaultConfig.RepoRoot)
+}
 
 // GetConfig get global config
 func GetConfig() *Config {

@@ -1,6 +1,11 @@
 package repository
 
-import "github.com/pkg/errors"
+import (
+	"os"
+	"path/filepath"
+
+	"github.com/pkg/errors"
+)
 
 // IRepository .
 type IRepository interface {
@@ -26,7 +31,15 @@ var (
 
 	// ErrKeyNotFound .
 	ErrKeyNotFound = errors.New("key not found")
+
+	// default path to save bader
+	_defaultBadgerDBPath = ".badger"
 )
+
+func init() {
+	home, _ := os.UserHomeDir()
+	_defaultBadgerDBPath = filepath.Join(home, _defaultBadgerDBPath)
+}
 
 // Init with specify DB type
 func Init(db DBType) (err error) {
@@ -34,11 +47,11 @@ func Init(db DBType) (err error) {
 	case Redis:
 		_repo, err = NewRedisRepo()
 	case Badger:
-		_repo, err = NewBadgerRepo("./.badger")
+		_repo, err = NewBadgerRepo(_defaultBadgerDBPath)
 	case Unknown:
 		fallthrough
 	default:
-		_repo, err = NewBadgerRepo("./.badger")
+		_repo, err = NewBadgerRepo(_defaultBadgerDBPath)
 	}
 
 	if err != nil {

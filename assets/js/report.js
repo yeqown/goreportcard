@@ -15,13 +15,13 @@ Handlebars.registerHelper('gradeMessage', function(grade, options) {
 Handlebars.registerHelper('color', function(percentage, options) {
   switch(true){
     case percentage < 30:
-      return 'is-danger';
+      return 'has-text-danger';
     case percentage < 50:
-      return 'is-warning';
+      return 'has-text-warning';
     case percentage < 80:
-      return 'is-info';
+      return 'has-text-info';
     default:
-      return 'is-success';
+      return 'has-text-success';
   };
 });
 

@@ -3,10 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
-
 	"github.com/gojp/goreportcard/internal/linter"
 
+	"github.com/pkg/errors"
 	"github.com/yeqown/log"
 )
 

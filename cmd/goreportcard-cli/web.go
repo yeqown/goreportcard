@@ -20,7 +20,7 @@ import (
 )
 
 func startWebServer(cfg *types.Config) error {
-	log.Debugf("start web weith config=%v", cfg)
+	log.Debugf("start web weith config=%+v", cfg)
 
 	// load VCS downloader and others
 	if err := vcshelper.Init(cfg.VCS, cfg.VCSOptions); err != nil {
