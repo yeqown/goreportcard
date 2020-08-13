@@ -1,5 +1,7 @@
 package vcshelper
 
+import "fmt"
+
 var (
 	_downloader IDownloader
 )
@@ -8,9 +10,10 @@ type IDownloader interface {
 	// Download to copy git repo to local folders
 	// @repoRoot is relative path to repo
 	// @err error
-	Download(remoteURL string, localDir string) (repoRoot string, err error)
+	Download(remoteURL, localDir, branch string) (repoRoot string, err error)
 }
 
+// TODO: 并发安全
 // GetDownloader get the builtin git downloader variable
 func GetDownloader() IDownloader {
 	return _downloader
@@ -39,10 +42,16 @@ func Init(vcs VCSType, opts []*VCSOption) error {
 		fallthrough
 	default:
 		fallthrough
+	//case GoGit:
+	// _downloader = NewGitDownloader(opts)
+	//fallthrough
 	case BuiltinTool:
-		_downloader = NewBuiltinToolVCS(opts)
-	case GoGit:
-		_downloader = NewGitDownloader(opts)
+		_downloader = newBuiltinToolVCS(opts)
 	}
-	return nil
+
+	if _downloader != nil {
+		return nil
+	}
+
+	return fmt.Errorf("invalid vcs type: %d", vcs)
 }

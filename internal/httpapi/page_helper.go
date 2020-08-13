@@ -25,7 +25,7 @@ func init() {
 
 func loadTpls() {
 	tpl404 = template.Must(
-		template.New("404.html").
+		template.New("404.html").Delims("[[", "]]").
 			ParseFiles("tpl/404.html", "tpl/footer.html", "tpl/header.html"))
 
 	tplReport = template.Must(
@@ -36,9 +36,9 @@ func loadTpls() {
 		template.New("home.html").Delims("[[", "]]").
 			ParseFiles("tpl/home.html", "tpl/footer.html", "tpl/header.html"))
 
-	funcs := template.FuncMap{"add": add, "formatScore": formatScore}
+	fns := template.FuncMap{"add": add, "formatScore": formatScore}
 	tplHighscore = template.Must(
-		template.New("high_scores.html").Delims("[[", "]]").Funcs(funcs).
+		template.New("high_scores.html").Delims("[[", "]]").Funcs(fns).
 			ParseFiles("tpl/high_scores.html", "tpl/footer.html", "tpl/header.html"))
 
 	tplAbout = template.Must(
@@ -50,7 +50,7 @@ func Error(w http.ResponseWriter, statusCode int, err error) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(statusCode)
-	fmt.Fprintln(w, err.Error())
+	_, _ = fmt.Fprintln(w, err.Error())
 }
 
 // JSON write json format message to client
@@ -64,8 +64,8 @@ func JSON(w http.ResponseWriter, statusCode int, v interface{}) {
 		return
 	}
 
-	log.Debugf("JSON with s=%s", string(d))
-	fmt.Fprintln(w, string(d))
+	// log.Debugf("JSON with s=%s", string(d))
+	_, _ = fmt.Fprintln(w, string(d))
 }
 
 // renderHTML render html file to client

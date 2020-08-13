@@ -38,23 +38,23 @@ var loadData = function(getRequest){
       url: url,
       data: data,
       dataType: "json"
-  }).fail(function(xhr, status, err){
-      alertMessage("There was an error processing your request: " + xhr.responseText);
-  }).done(function(data, textStatus, jqXHR){
-    if (data.redirect) {
-        window.location.href = data.redirect;
-    }
-  }).always(function(){
-      loading = false;
-      $("a.refresh-button").removeClass("is-loading");
-      $("#check_form .button").removeClass("is-loading");
-  });
+    }).fail(function(xhr, status, err){
+        alertMessage("There was an error processing your request: " + xhr.responseText);
+    }).done(function(data, textStatus, jqXHR){
+        if (data.redirect) {
+            window.location.href = data.redirect;
+        }
+    }).always(function(){
+        loading = false;
+        $("a.refresh-button").removeClass("is-loading");
+        $("#check_form .button").removeClass("is-loading");
+    });
+
   return false;
 };
 
 // on ready
 $(function(){
-
   // handle form submission
   $("form#check_form").submit(loadData);
 });

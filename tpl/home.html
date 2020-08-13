@@ -18,29 +18,34 @@
             </div>
 
             <form method="POST" action="/checks" id="check_form">
-                <div class="container subtitle">
-                    <p class="url">
+                <div class="control field is-grouped" style="justify-content: center">
+                    <div class="control" style="width:50%">
                         <input name="repo" type="text" class="input is-medium"
                                placeholder="github.com/yeqown/goreportcard"/>
-                    </p>
+                    </div>
+                    <div class="control">
+                        <input name="branch" type="text" class="input is-medium"
+                               placeholder="master"/>
+                    </div>
                 </div>
-                <div>
+
+                <div class="control">
                     <button type="submit" class="button is-medium is-primary" href="#" role="button">
-                        Generate
+                        Detection now
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </section>
+
 <section class="section container-suggestions">
     <div class="container">
         <h3 class="subtitle">Recently Generated</h3>
-
         <table class="table content is-fullwidth">
             <thead>
             <tr>
-                <th> Project name </th>
+                <th>Detection Report</th>
                 <th> Score </th>
                 <th> Grade </th>
                 <th> Last generate time </th>
@@ -49,7 +54,7 @@
             <tbody>
             [[ range .Recent ]]
             <tr>
-                <td class="table-link"><a class="has-text-primary" href="/report/[[ .Repo ]]">[[ .Repo ]]</td>
+                <td class="table-link"><a class="has-text-primary" href="/report/[[ .Repo ]]?branch=[[ .Branch ]]">[[ .Repo ]]@[[.Branch]]</td>
                 <td class="table-link">[[ .Score ]]</td>
                 <td class="table-link">[[ .Grade ]]</td>
                 <td class="table-link">[[ .LastGeneratedTime ]]</td>

@@ -23,7 +23,8 @@
             <thead>
             <tr>
                 <th>Rank</th>
-                <th>Project Name</th>
+                <th>Detection Report</th>
+                <th>Code Repository</th>
                 <th>Go Files Count</th>
                 <th>Score</th>
             </tr>
@@ -31,9 +32,9 @@
             <tbody>
             [[ range $index, $highScore := .HighScores ]]
             <tr>
-                <td><a class="has-text-primary" href="/report/[[ $highScore.Repo]]">[[ add $index 1 ]]</td>
-                </a>
-                <td><a class="has-text-primary" href="https://[[ $highScore.Repo ]]" rel="nofollow">[[ $highScore.Repo ]]</a></td>
+                <td>[[ add $index 1 ]]</td>
+                <td><a class="has-text-primary" href="/report/[[ $highScore.Repo]]">[[ $highScore.Repo ]]@[[ $highScore.Branch ]]</a></td>
+                <td> <a class="has-text-primary" href="https://[[ $highScore.Repo ]]/tree/[[ $highScore.Branch ]]" rel="nofollow">Checkout</a> </td>
                 <td>[[ $highScore.Files ]]</td>
                 <td>[[ formatScore $highScore.Score ]]</td>
             </tr>

@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/gojp/goreportcard/internal/repository"
-	"github.com/gojp/goreportcard/internal/types"
+	"github.com/yeqown/goreportcard/internal/repository"
+	"github.com/yeqown/goreportcard/internal/types"
 
 	"github.com/dustin/go-humanize"
 	"github.com/yeqown/log"
@@ -27,14 +27,15 @@ func errorHandler(w http.ResponseWriter, r *http.Request, status int) {
 }
 
 var cache struct {
-	items []recentRepo
+	items []recentItemForDisplay
 	mux   sync.Mutex
 	count int
 }
 
-type recentRepo struct {
+type recentItemForDisplay struct {
 	Repo              string
 	Grade             string
+	Branch            string
 	Score             string
 	LastGeneratedTime string
 }
@@ -46,7 +47,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var recentRepos []recentRepo
+	var recentRepos []recentItemForDisplay
 
 	cache.mux.Lock()
 	cache.count++
@@ -61,12 +62,13 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 			log.Warnf("HomeHandler failed to loadRecentlyViewed, err=%v", err)
 		}
 
-		recentRepos = make([]recentRepo, len(items))
+		recentRepos = make([]recentItemForDisplay, len(items))
 		var j = len(items) - 1
 		for _, v := range items {
-			recentRepos[j] = recentRepo{
+			recentRepos[j] = recentItemForDisplay{
 				Repo:              v.Repo,
 				Grade:             v.Grade,
+				Branch:            v.Branch,
 				Score:             fmt.Sprintf("%.2f", v.Score*100),
 				LastGeneratedTime: humanize.Time(v.LastGeneratedTime),
 			}
@@ -84,11 +86,13 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // ReportHandler handles the report page
-func ReportHandler(w http.ResponseWriter, r *http.Request, repoName string) {
-	log.Infof("Displaying report: %q", repoName)
-	var needToLoad bool
+func ReportHandler(w http.ResponseWriter, r *http.Request, p *types.RepoReportParam) {
+	log.WithFields(log.Fields{
+		"param": p,
+	}).Infof("displaying report")
+	var loading bool
 
-	lintResult, err := loadLintResult(repoName)
+	lintResult, err := loadLintResult(p)
 	if err != nil {
 		switch err {
 		case repository.ErrKeyNotFound:
@@ -96,7 +100,7 @@ func ReportHandler(w http.ResponseWriter, r *http.Request, repoName string) {
 		default:
 			log.Errorf("ReportHandler failed load lintResult, err=%v", err)
 		}
-		needToLoad = true
+		loading = true
 	}
 
 	d, err := json.Marshal(lintResult)
@@ -107,9 +111,10 @@ func ReportHandler(w http.ResponseWriter, r *http.Request, repoName string) {
 	}
 
 	data := map[string]interface{}{
-		"repo":     repoName,
+		"repo":     p.Repo(),
+		"branch":   p.Branch(),
 		"response": string(d),
-		"loading":  needToLoad,
+		"loading":  loading,
 		"domain":   types.GetConfig().Domain,
 	}
 	renderHTML(w, http.StatusOK, tplReport, data)

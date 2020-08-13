@@ -7,8 +7,9 @@
     <title>Go Report Card | Go project code quality report cards</title>
     <link rel="stylesheet" href="/assets/css/bulma.min.css">
 </head>
-[[ template "header" . ]]
 
+<body>
+[[ template "header" . ]]
 <section class="section">
     <div class="container">
         <div class="columns">
@@ -20,25 +21,20 @@
                 <h1 class="title">Page not found!</h1>
                 <p>It seems like the page you are looking for is no longer here. ILinter the URL for typos, or click
                     below to return to the homepage. If you think this is a mistake, please <a
-                            href="https://github.com/yeqown/goreportcard/issues">open an issue on Github</a>.</p>
+                href="https://github.com/yeqown/goreportcard/issues">open an issue on Github</a>.</p>
                 <p>
-                <h3 class="subtitle"><a href="/">Back to grading Go repos</a></h3></p>
+                    <h3 class="subtitle"><a href="/">Back to grading Go repos</a></h3></p>
             </div>
         </div>
+    </div>
 </section>
 [[ template "footer" . ]]
+</body>
+
 <style>
     #gopherimage {
         width: 200px;
         margin: 0;
-        -webkit-animation:spin 2s linear infinite;
-        -moz-animation:spin 2s linear infinite;
-        animation:spin 2s linear infinite;
     }
-    @-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
-    @-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
-    @keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
-
 </style>
-</body>
 </html>

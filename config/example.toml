@@ -1,1 +1,15 @@
-[port]
+port = 8000
+db = 1      # 1 for redis,  2 for badger
+vcs = 2     # 1 for go-git, 2 for git command
+repoRoot = "/Users/med/goreportcard-repos"
+skipDirs = []
+domain = "http://localhost:8000"
+
+[[vcs_options]]
+    Host = "github.com"
+    PrivateKeyPath = "/Users/med/.ssh/id_rsa"
+    Prefix = "git"
+
+[[uriFormatRules]]
+    prefix = "github.com"
+    uriFormat = "https://%s/blob/%s/%s"

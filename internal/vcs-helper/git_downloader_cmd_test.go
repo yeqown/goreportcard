@@ -5,15 +5,16 @@ import (
 )
 
 func Test_builtinToolVCS_Download(t *testing.T) {
-	cfgs := map[string]string{
-		"github.com":        "git",
-		"git.medlinker.com": "medgit",
+	cfgs := []*VCSOption{
+		{Host: "github.com", Prefix: "git"},
+		{Host: "git.medlinker.com", Prefix: "medgit"},
 	}
-	vcs := NewBuiltinToolVCS(cfgs)
+	vcs := newBuiltinToolVCS(cfgs)
 
 	type args struct {
 		remoteURI string
 		localDir  string
+		branch    string
 	}
 	tests := []struct {
 		name         string
@@ -42,7 +43,7 @@ func Test_builtinToolVCS_Download(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRepoRoot, err := vcs.Download(tt.args.remoteURI, tt.args.localDir)
+			gotRepoRoot, err := vcs.Download(tt.args.remoteURI, tt.args.localDir, tt.args.branch)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("builtinToolVCS.Download() error = %v, wantErr %v", err, tt.wantErr)
 				return

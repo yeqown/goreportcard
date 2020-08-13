@@ -11,9 +11,10 @@ var (
 )
 
 type scoreItem struct {
-	Repo  string  `json:"repo"`
-	Score float64 `json:"score"`
-	Files int     `json:"files"`
+	Repo   string  `json:"repo"`
+	Branch string  `json:"branch"`
+	Score  float64 `json:"score"`
+	Files  int     `json:"files"`
 }
 
 // An ScoreHeap is a min-heap of int array.

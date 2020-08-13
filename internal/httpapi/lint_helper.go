@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gojp/goreportcard/internal/linter"
-	"github.com/gojp/goreportcard/internal/repository"
-	"github.com/gojp/goreportcard/internal/types"
-	vcshelper "github.com/gojp/goreportcard/internal/vcs-helper"
+	"github.com/yeqown/goreportcard/internal/linter"
+	"github.com/yeqown/goreportcard/internal/repository"
+	"github.com/yeqown/goreportcard/internal/types"
+	vcshelper "github.com/yeqown/goreportcard/internal/vcs-helper"
 
 	"github.com/dustin/go-humanize"
 	"github.com/pkg/errors"
@@ -17,10 +17,14 @@ import (
 )
 
 // executing golangci-lint tool, and return result
-func doling(repoName string, forceRefresh bool) (types.LintResult, error) {
-	log.Debugf("doling called with repoName=%s, forceRefresh=%v", repoName, forceRefresh)
+func doling(p *types.RepoReportParam, forceRefresh bool) (types.LintResult, error) {
+	log.WithFields(log.Fields{
+		"param":        p,
+		"forceRefresh": forceRefresh,
+	}).Debugf("doling called")
+
 	if !forceRefresh {
-		resp, err := loadLintResult(repoName)
+		resp, err := loadLintResult(p)
 		if err == nil {
 			return *resp, nil
 		}
@@ -28,12 +32,14 @@ func doling(repoName string, forceRefresh bool) (types.LintResult, error) {
 		log.Warnf("doling failed to loadLintResult, err=%v", err)
 	}
 
-	// fetch the repoName and grade it
-	root, err := vcshelper.GetDownloader().Download(repoName, types.GetConfig().RepoRoot)
+	// fetch the repoIdentity and grade it
+	root, err := vcshelper.GetDownloader().Download(p.Repo(), types.GetConfig().RepoRoot, p.Branch())
 	if err != nil {
-		return types.LintResult{}, errors.Errorf("could not clone repoName: %v", err)
+		return types.LintResult{}, errors.Errorf("could not clone repoIdentity: %v", err)
 	}
-	log.Infof("doling download repoName=%s finished", repoName)
+	log.WithFields(log.Fields{
+		"repo": p.Repo(),
+	}).Infof("repo has been downloaded")
 
 	result, err := linter.Lint(root)
 	if err != nil {
@@ -47,16 +53,17 @@ func doling(repoName string, forceRefresh bool) (types.LintResult, error) {
 		Grade:                result.Grade,
 		FilesCount:           result.Files,
 		IssuesCount:          result.Issues,
-		Repo:                 repoName,
-		ResolvedRepo:         repoName,
+		Repo:                 p.Repo(),
+		ResolvedRepo:         p.Repo(),
+		Branch:               p.Branch(),
 		LastRefresh:          t,
 		LastRefreshFormatted: t.Format(time.UnixDate),
 		LastRefreshHumanized: humanize.Time(t),
 	}
 
 	var (
-		isNewRepo bool // current repoName is first encounter with goreportcard
-		key       = lintResultKey(repoName)
+		isNewRepo bool // current repoIdentity is first encounter with goreportcard
+		key       = lintResultKey(p)
 	)
 
 	v, err := repository.GetRepo().Get(key)
@@ -67,13 +74,13 @@ func doling(repoName string, forceRefresh bool) (types.LintResult, error) {
 
 	// if this is a new repo, or the user force-refreshed, update the cache
 	if isNewRepo || forceRefresh {
-		if err = updateLintResult(repoName, lintResult); err != nil {
+		if err = updateLintResult(p, lintResult); err != nil {
 			log.Errorf("doling update lintResult failed key=%s, err=%v", key, err)
 		}
 		log.Debugf("doling updateLintResult success")
 	}
 
-	if err := updateMetadata(lintResult, repoName, isNewRepo); err != nil {
+	if err := updateMetadata(lintResult, p, isNewRepo); err != nil {
 		log.Errorf("doling.updateMetadata failed: err=%v", err)
 	}
 
@@ -81,14 +88,14 @@ func doling(repoName string, forceRefresh bool) (types.LintResult, error) {
 }
 
 // lintResultKey . to generate db.Key of lint result
-func lintResultKey(repoName string) []byte {
-	return []byte("repos-" + repoName)
+func lintResultKey(p *types.RepoReportParam) []byte {
+	return []byte("repos-" + p.RepoIdentity())
 }
 
-// loadLintResult query lintResult by repoName, if hit in DB then return,
+// loadLintResult query lintResult by repoIdentity, if hit in DB then return,
 // otherwise return an error.
-func loadLintResult(repoName string) (*types.LintResult, error) {
-	key := lintResultKey(repoName)
+func loadLintResult(p *types.RepoReportParam) (*types.LintResult, error) {
+	key := lintResultKey(p)
 	data, err := repository.GetRepo().Get(key)
 	if err != nil {
 		return nil, err
@@ -108,13 +115,13 @@ func loadLintResult(repoName string) (*types.LintResult, error) {
 }
 
 // updateLintResult update lintResult in DB.
-func updateLintResult(repoName string, result types.LintResult) error {
+func updateLintResult(p *types.RepoReportParam, result types.LintResult) error {
 	data, err := json.Marshal(result)
 	if err != nil {
 		return errors.Wrap(err, "updateLintResult.jsonMarshal")
 	}
 
-	key := lintResultKey(repoName)
+	key := lintResultKey(p)
 	if err = repository.GetRepo().Update(key, data); err != nil {
 		return errors.Wrap(err, "updateLintResult.Update")
 	}
@@ -124,9 +131,14 @@ func updateLintResult(repoName string, result types.LintResult) error {
 
 type recentItem struct {
 	Repo              string
+	Branch            string
 	Grade             string
 	Score             float64
 	LastGeneratedTime time.Time
+}
+
+func (r recentItem) Equal(r2 recentItem) bool {
+	return r.Repo == r2.Repo && r.Branch == r2.Branch
 }
 
 var (
@@ -157,8 +169,8 @@ func updateRecentlyViewed(item recentItem) (err error) {
 
 	// add it to the slice, if it is not in there already
 	for _, v := range items {
-		if v.Repo == item.Repo {
-			log.Infof("updateRecentlyViewed has exists repoName=%s, so skipped", item.Repo)
+		if v.Equal(item) {
+			log.Infof("updateRecentlyViewed has exists repoIdentity=%s, so skipped", item.Repo)
 			return
 		}
 	}
@@ -189,7 +201,9 @@ func loadRecentlyViewed() ([]recentItem, error) {
 		return nil, err
 	}
 
-	log.Debugf("loadRecentlyViewed got d=%s", d)
+	log.WithFields(log.Fields{
+		"d": d,
+	}).Debugf("loadRecentlyViewed raw data")
 	if err = json.Unmarshal(d, &items); err != nil {
 		return nil, err
 	}
@@ -223,7 +237,7 @@ func loadHighScores() (scores ScoreHeap, err error) {
 }
 
 // updateHighScores .
-func updateHighScores(result types.LintResult, repoName string) (err error) {
+func updateHighScores(result types.LintResult, p *types.RepoReportParam) (err error) {
 	var (
 		_repo = repository.GetRepo()
 		d     []byte
@@ -257,7 +271,7 @@ func updateHighScores(result types.LintResult, repoName string) (err error) {
 
 	// if this repo is already in the list, remove the original entry:
 	for idx, v := range *scores {
-		if strings.EqualFold(v.Repo, repoName) {
+		if strings.EqualFold(v.Repo, p.RepoIdentity()) {
 			heap.Remove(scores, idx)
 			break
 		}
@@ -266,9 +280,10 @@ func updateHighScores(result types.LintResult, repoName string) (err error) {
 	// now we can safely push it onto the heap
 	heap.Init(scores)
 	heap.Push(scores, scoreItem{
-		Repo:  repoName,
-		Score: result.Average * 100.0,
-		Files: result.FilesCount,
+		Repo:   p.Repo(),
+		Branch: p.Branch(),
+		Score:  result.Average * 100.0,
+		Files:  result.FilesCount,
 	})
 
 	if len(*scores) > 50 {
@@ -309,8 +324,8 @@ func loadReposCount() (cnt int, err error) {
 }
 
 // only new can update
-func incrReposCnt(repoName string) (err error) {
-	log.Infof("New repo %q, adding to repo count...", repoName)
+func incrReposCnt(repoIdentity string) (err error) {
+	log.Infof("New repo %q, adding to repo count...", repoIdentity)
 	var (
 		_repo = repository.GetRepo()
 		d     []byte
@@ -341,26 +356,29 @@ func incrReposCnt(repoName string) (err error) {
 }
 
 // updateMetadata to record some data of goreportcard
-func updateMetadata(result types.LintResult, repoName string, isNewRepo bool) (err error) {
+func updateMetadata(result types.LintResult, p *types.RepoReportParam, isNewRepo bool) (err error) {
 	// increase repos count
 	if isNewRepo {
-		if err = incrReposCnt(repoName); err != nil {
+		if err = incrReposCnt(p.RepoIdentity()); err != nil {
 			log.Errorf("updateMetadata.incrReposCnt failed: err=%v", err)
 		}
 	}
+
 	item := recentItem{
-		Repo:              repoName,
+		Repo:              p.Repo(),
+		Branch:            p.Branch(),
 		Grade:             string(result.Grade),
 		Score:             result.Average,
 		LastGeneratedTime: result.LastRefresh,
 	}
+
 	if err = updateRecentlyViewed(item); err != nil {
 		log.Errorf("updateMetadata.updateRecentlyViewed failed: err=%v", err)
 	}
-	if err = updateHighScores(result, repoName); err != nil {
+	if err = updateHighScores(result, p); err != nil {
 		log.Errorf("updateMetadata.updateHighScores failed: err=%v", err)
 	}
-	log.Infof("updateMetadata success")
 
+	log.Infof("updateMetadata success")
 	return
 }

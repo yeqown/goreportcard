@@ -14,5 +14,6 @@ run: build
 	./goreportcard-cli start-web
 
 image:
-	docker build -t goreportcard:v1.0.0 .
+	# TAG=v1.1.0 @2020-08-12
+	docker build -t yewown/goreportcard:${TAG} .
 

@@ -41,6 +41,7 @@ type LintResult struct {
 	IssuesCount          int       `json:"issues"`
 	Repo                 string    `json:"repo"`
 	ResolvedRepo         string    `json:"resolvedRepo"`
+	Branch               string    `json:"branch"`
 	LastRefresh          time.Time `json:"last_refresh"`
 	LastRefreshFormatted string    `json:"formatted_last_refresh"`
 	LastRefreshHumanized string    `json:"humanized_last_refresh"`

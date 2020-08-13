@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gojp/goreportcard/internal/types"
+	"github.com/yeqown/goreportcard/internal/types"
 )
 
 // func TestGoFiles(t *testing.T) {

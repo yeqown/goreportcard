@@ -13,8 +13,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/gojp/goreportcard/internal/types"
 	"github.com/pkg/errors"
+	"github.com/yeqown/goreportcard/internal/types"
 	"github.com/yeqown/log"
 )
 

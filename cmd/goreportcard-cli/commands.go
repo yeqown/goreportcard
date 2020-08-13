@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gojp/goreportcard/internal/types"
+	"github.com/yeqown/goreportcard/internal/types"
 
 	"github.com/pkg/errors"
 	cli "github.com/urfave/cli/v2"

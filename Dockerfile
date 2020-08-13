@@ -24,7 +24,6 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositorie
     && apk add git \
     && apk add openssh \
     && apk add build-base \
-    && apk clean all \
     && rm -fr /var/cache \
     && export GOPROXY="https://goproxy.cn,direct"
 

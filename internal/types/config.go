@@ -4,19 +4,19 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gojp/goreportcard/internal/repository"
-	vcshelper "github.com/gojp/goreportcard/internal/vcs-helper"
+	"github.com/yeqown/goreportcard/internal/repository"
+	vcshelper "github.com/yeqown/goreportcard/internal/vcs-helper"
 
 	"github.com/BurntSushi/toml"
 	"github.com/pkg/errors"
 )
 
 var (
-	_cfg           *Config
+	_cfg           *Config // global config instance
 	_defaultConfig = &Config{
 		Port: 8000,
 		DB:   repository.Badger,
-		VCS:  vcshelper.BuiltinTool,
+		// VCS:  vcshelper.BuiltinTool,
 		VCSOptions: []*vcshelper.VCSOption{
 			{
 				Host:           "github.com",
@@ -80,9 +80,9 @@ func writeConfig(confPath string, cfg *Config) error {
 
 type Config struct {
 	// server options
-	Port       int                    `toml:"port"`
-	DB         repository.DBType      `toml:"db"`
-	VCS        vcshelper.VCSType      `toml:"vcs"`
+	Port int               `toml:"port"`
+	DB   repository.DBType `toml:"db"`
+	// VCS        vcshelper.VCSType      `toml:"vcs"`
 	VCSOptions []*vcshelper.VCSOption `toml:"vcs_options"`
 	RepoRoot   string                 `toml:"repoRoot"`
 	Domain     string                 `toml:"domain"`

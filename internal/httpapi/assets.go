@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/gojp/goreportcard/internal/types"
+	"github.com/yeqown/goreportcard/internal/types"
 	"github.com/yeqown/log"
 )
 
@@ -35,14 +35,17 @@ func (hdl *assetsHandler) Favicon(w http.ResponseWriter, req *http.Request) {
 
 // BadgeHandler handles fetching the badge images
 // See: http://shields.io/#styles
-func (hdl *assetsHandler) Badge(w http.ResponseWriter, req *http.Request, repo string) {
+func (hdl *assetsHandler) Badge(w http.ResponseWriter, req *http.Request, p *types.RepoReportParam) {
 	style := req.URL.Query().Get("style")
 	if style == "" {
 		style = "flat"
 	}
 
-	if g, ok := hdl.badgeCache.Load(repo); ok {
-		log.Infof("Fetching badge for %q from cache...", repo)
+	if g, ok := hdl.badgeCache.Load(p.RepoIdentity()); ok {
+		log.WithFields(log.Fields{
+			"param":    p,
+			"identity": p.RepoIdentity(),
+		}).Infof("Fetching badge from cache")
 
 		w.Header().Set("Cache-control", "no-store, no-badgeCache, must-revalidate")
 		http.ServeFile(w, req, badgePath(g.(types.Grade), style))
@@ -50,16 +53,19 @@ func (hdl *assetsHandler) Badge(w http.ResponseWriter, req *http.Request, repo s
 	}
 
 	// not found in cache, then reload from lint
-	r, err := doling(repo, false)
+	r, err := doling(p, false)
 	if err != nil {
-		log.Errorf("fetching badge for %s: %v", repo, err)
+		log.WithFields(log.Fields{
+			"param": p,
+			"error": err,
+		}).Errorf("fetching badge failed")
 		url := "https://img.shields.io/badge/go%20report-error-lightgrey.svg?style=" + style
 		http.Redirect(w, req, url, http.StatusTemporaryRedirect)
 		return
 	}
 
 	// update cache
-	hdl.badgeCache.Store(repo, r.Grade)
+	hdl.badgeCache.Store(p.RepoIdentity(), r.Grade)
 
 	w.Header().Set("Cache-control", "no-store, no-badgeCache, must-revalidate")
 	http.ServeFile(w, req, badgePath(r.Grade, style))

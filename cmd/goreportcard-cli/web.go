@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gojp/goreportcard/internal/httpapi"
-	"github.com/gojp/goreportcard/internal/repository"
-	"github.com/gojp/goreportcard/internal/types"
-	vcshelper "github.com/gojp/goreportcard/internal/vcs-helper"
+	"github.com/yeqown/goreportcard/internal/httpapi"
+	"github.com/yeqown/goreportcard/internal/repository"
+	"github.com/yeqown/goreportcard/internal/types"
+	vcs "github.com/yeqown/goreportcard/internal/vcs-helper"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -20,10 +20,10 @@ import (
 )
 
 func startWebServer(cfg *types.Config) error {
-	log.Debugf("start web weith config=%+v", cfg)
+	log.Debugf("start web with config=%+v", cfg)
 
 	// load VCS downloader and others
-	if err := vcshelper.Init(cfg.VCS, cfg.VCSOptions); err != nil {
+	if err := vcs.Init(vcs.BuiltinTool, cfg.VCSOptions); err != nil {
 		return errors.Wrap(err, "startWebServer.httpapi.Init")
 	}
 
@@ -74,6 +74,12 @@ func withMetrics(fn http.HandlerFunc) http.HandlerFunc {
 	})
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.WithFields(log.Fields{
+			"method": r.Method,
+			"query":  r.URL.RawQuery,
+			"path":   r.URL.Path,
+		}).Info("a request coming")
+
 		start := time.Now()
 		fn(w, r)
 		elapsed := time.Since(start)
@@ -82,7 +88,7 @@ func withMetrics(fn http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-type repoHandleFunc func(w http.ResponseWriter, req *http.Request, repo string)
+type repoHandleFunc func(w http.ResponseWriter, req *http.Request, p *types.RepoReportParam)
 
 // resolveRepoPath to resolve sub path of repo URL:
 // https://example.com/report/github.com/golang/go
@@ -90,6 +96,11 @@ func resolveRepoPath(prefix string, fn repoHandleFunc) http.HandlerFunc {
 	reg := regexp.MustCompile(fmt.Sprintf(`^/%s/([a-zA-Z0-9\-_\/\.]+)$`, prefix))
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		branch := r.FormValue(types.BranchFormKey)
+		if branch == "" {
+			branch = types.MasterBranch
+		}
+
 		m := reg.FindStringSubmatch(r.URL.Path)
 		if m == nil {
 			http.NotFound(w, r)
@@ -119,6 +130,6 @@ func resolveRepoPath(prefix string, fn repoHandleFunc) http.HandlerFunc {
 			return
 		}
 
-		fn(w, r, repo)
+		fn(w, r, types.NewRepoParam(repo, branch))
 	}
 }
