@@ -89,18 +89,19 @@ func (c builtinToolVCS) run1(dir string, cmdline string, keyval []string, verbos
 	return out, nil
 }
 
-func (c builtinToolVCS) Download(repoURL, localDir, branch string) (string, error) {
+func (c builtinToolVCS) Download(repoURL, parent, branch string) (string, error) {
 	outs, err := hdlRepoURL(repoURL)
 	if err != nil {
 		log.Errorf("could hdl repoURL=%s, err=%v", repoURL, err)
-		return localDir, errors.Wrap(err, "gitDownload.clone failed to hdlRepoURL")
+		return parent, errors.Wrap(err, "gitDownload.clone failed to hdlRepoURL")
 	}
 	host, owner, repoName := outs[0], outs[1], outs[2]
 
 	// make sure the path has exists
-	localDir = filepath.Join(localDir, host, owner, repoName)
-	if err := helper.EnsurePath(localDir); err != nil {
-		return localDir, errors.Wrap(err, "gitDownload.clone.EnsurePath")
+	repoPath := filepath.Join(parent, host, owner, repoName)
+	repoPathWithoutRepoName := filepath.Join(parent, host, owner)
+	if err := helper.EnsurePath(repoPath); err != nil {
+		return repoPath, errors.Wrap(err, "gitDownload.clone.EnsurePath")
 	}
 
 	// get git prefix
@@ -114,37 +115,37 @@ func (c builtinToolVCS) Download(repoURL, localDir, branch string) (string, erro
 	remoteURI := wrapRepoURL(prefix, host, owner, repoName)
 
 	// 创建或者更新本地代码
-	if c.shouldCreate(localDir) {
-		err = c.run(localDir, c.cloneCmd, "remote", remoteURI)
+	if c.shouldClone(repoPath) {
+		err = c.run(repoPathWithoutRepoName, c.cloneCmd, "remote", remoteURI)
 		if err != nil {
-			return localDir, err
+			return repoPath, err
 		}
 
 		// checkout
-		err = c.run(localDir, c.checkoutCmd, "branch", branch)
-		return localDir, err
+		err = c.run(repoPath, c.checkoutCmd, "branch", branch)
+		return repoPath, err
 	}
 
 	// 已经存在的分支，则先同步再更新本地代码
 	// fetch all
-	err = c.run(localDir, c.fetchCmd, "arg", "--all")
+	err = c.run(repoPath, c.fetchCmd, "arg", "--all")
 	if err != nil {
-		return localDir, err
+		return repoPath, err
 	}
 
 	// checkout
-	err = c.run(localDir, c.checkoutCmd, "branch", branch)
+	err = c.run(repoPath, c.checkoutCmd, "branch", branch)
 	if err != nil {
-		return localDir, err
+		return repoPath, err
 	}
 
 	// pull
-	err = c.run(localDir, c.pullCmd, "branch", branch)
+	err = c.run(repoPath, c.pullCmd, "branch", branch)
 	if err != nil {
-		return localDir, err
+		return repoPath, err
 	}
 
-	return localDir, err
+	return repoPath, err
 }
 
 // expand rewrites s to replace {k} with match[k] for each key k in match.
@@ -184,7 +185,7 @@ NextVar:
 	return out
 }
 
-// shouldCreate if dir is empty means should Create else Download
-func (vcs builtinToolVCS) shouldCreate(localDir string) bool {
+// shouldClone if dir is empty means should Create else Download
+func (vcs builtinToolVCS) shouldClone(localDir string) bool {
 	return helper.IsEmptyDir(localDir)
 }
