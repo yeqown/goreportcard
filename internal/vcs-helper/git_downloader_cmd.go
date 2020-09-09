@@ -113,27 +113,38 @@ func (c builtinToolVCS) Download(repoURL, localDir, branch string) (string, erro
 	}
 	remoteURI := wrapRepoURL(prefix, host, owner, repoName)
 
+	// 创建或者更新本地代码
 	if c.shouldCreate(localDir) {
 		// TODO: create local folder first
 		err = c.run(c.cloneCmd, "remote", remoteURI)
 		if err != nil {
 			return localDir, err
 		}
-	} else {
-		// fetch all
-		err = c.run(c.fetchCmd, "arg", "--all")
-		if err != nil {
-			return localDir, err
-		}
 
-		// TODO: checkout and pull
+		// checkout
+		err = c.run(c.checkoutCmd, "branch", branch)
+		return localDir, err
+	}
 
-		// pull
-		err = c.run(c.pullCmd, "branch", branch)
+	// 已经存在的分支，则先同步再更新本地代码
+	// fetch all
+	err = c.run(localDir, c.fetchCmd, "arg", "--all")
+	if err != nil {
+		return localDir, err
 	}
 
 	// checkout
-	err = c.run(c.checkoutCmd, "branch", branch)
+	err = c.run(localDir, c.checkoutCmd, "branch", branch)
+	if err != nil {
+		return localDir, err
+	}
+
+	// pull
+	err = c.run(localDir, c.pullCmd, "branch", branch)
+	if err != nil {
+		return localDir, err
+	}
+
 	return localDir, err
 }
 

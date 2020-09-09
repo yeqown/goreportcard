@@ -202,7 +202,7 @@ func loadRecentlyViewed() ([]recentItem, error) {
 	}
 
 	log.WithFields(log.Fields{
-		"d": d,
+		"d": string(d),
 	}).Debugf("loadRecentlyViewed raw data")
 	if err = json.Unmarshal(d, &items); err != nil {
 		return nil, err

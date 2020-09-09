@@ -15,5 +15,5 @@ run: build
 
 image:
 	# TAG=v1.1.0 @2020-08-12
-	docker build -t yewown/goreportcard:${TAG} .
+	docker build -t yeqown/goreportcard:${TAG} .
 
