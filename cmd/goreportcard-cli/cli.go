@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/yeqown/goreportcard/internal/types"
+
 	"github.com/yeqown/goreportcard/internal/linter"
 
 	"github.com/pkg/errors"
@@ -12,7 +14,12 @@ import (
 func runCli(dir string, verbose bool) error {
 	log.SetLogLevel(log.LevelError)
 
-	r, err := linter.Lint(dir)
+	ctx := linter.Context{
+		Dir:    dir,
+		Branch: types.MasterBranch,
+	}
+
+	r, err := linter.Lint(ctx)
 	if err != nil {
 		log.Errorf("Fatal error checking %s: %s", dir, err.Error())
 		return errors.Wrapf(err, "Fatal error checking: [%s]", dir)

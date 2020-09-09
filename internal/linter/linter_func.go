@@ -8,30 +8,40 @@ import (
 	"github.com/yeqown/log"
 )
 
+// Context is Lint function's param
+type Context struct {
+	Dir       string   // Dir of repo
+	Filenames []string // Filenames of repo
+	Branch    string   // Branch of repo
+}
+
 // Lint executes all checks on the given directory
 //
 // 1. get repo status: @fileCount @lineCount
 // 2. call `golangci-lint` to lint, get errors
 // 3. calc score of each linters
 // 4. return result
-func Lint(dir string) (types.ChecksResult, error) {
-	log.Debugf("Lint recv params @dir=%s", dir)
+func Lint(ctx Context) (result types.LintResult, err error) {
+	log.Debugf("Lint recv params @dir=%s", ctx.Dir)
 
-	filenames, err := visitGoFiles(dir)
+	filenames, err := visitGoFiles(ctx.Dir)
 	if err != nil {
-		return types.ChecksResult{}, errors.Errorf("could not get filenames: %v", err)
+		err = errors.Errorf("could not get filenames: %v", err)
+		return
 	}
 	if len(filenames) == 0 {
-		return types.ChecksResult{}, errors.Errorf("no .go files found")
+		err = errors.Errorf("no .go files found")
+		return
 	}
+	ctx.Filenames = filenames
 
 	var (
-		linters   = getLinters(dir, filenames)
-		chanScore = make(chan types.Score)
+		linters   = getLinters()
+		chanScore = make(chan types.Score, len(linters))
 	)
 
 	for _, linter := range linters {
-		go execLinter(linter, chanScore)
+		go execLinter(ctx, linter, chanScore)
 	}
 
 	var (
@@ -56,7 +66,7 @@ func Lint(dir string) (types.ChecksResult, error) {
 	total /= totalWeight
 	sort.Sort(scores)
 
-	r := types.ChecksResult{
+	result = types.LintResult{
 		Files:   len(filenames),
 		Issues:  issuesCnt,
 		Average: total,
@@ -64,7 +74,7 @@ func Lint(dir string) (types.ChecksResult, error) {
 		Grade:   types.GradeFromPercentage(total * 100),
 	}
 
-	return r, nil
+	return
 }
 
 // https://golangci-lint.run/usage/linters/
@@ -85,67 +95,67 @@ func Lint(dir string) (types.ChecksResult, error) {
 
 // getLinters . load all linters to run
 // linters: https://golangci-lint.run/usage/linters/
-func getLinters(dir string, filenames []string) []ILinter {
+func getLinters() []ILinter {
 	return []ILinter{
 		builtin{
-			Dir: dir, Filenames: filenames, name: "govet", weight: .25,
+			name: "govet", weight: .30,
 			desc: "Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string.",
 		}, // govet
 		builtin{
-			Dir: dir, Filenames: filenames, name: "errcheck", weight: .05,
+			name: "errcheck", weight: .10,
 			desc: "Errcheck is a program for checking for unchecked errors in go programs. These unchecked errors can be critical bugs in some cases.",
 		}, // errcheck
 		builtin{
-			Dir: dir, Filenames: filenames, name: "ineffassign", weight: .05,
+			name: "ineffassign", weight: .05,
 			desc: "Detects when assignments to existing variables are not used.",
 		}, // ineffassign
 		builtin{
-			Dir: dir, Filenames: filenames, name: "deadcode", weight: .05,
+			name: "deadcode", weight: .05,
 			desc: "Finds unused code",
 		}, // deadcode
 		builtin{
-			Dir: dir, Filenames: filenames, name: "gosimple", weight: .05,
+			name: "gosimple", weight: .05,
 			desc: "Linter for Go source code that specializes in simplifying a code.",
 		}, // gosimple
 		builtin{
-			Dir: dir, Filenames: filenames, name: "staticcheck", weight: .05,
+			name: "staticcheck", weight: .05,
 			desc: "Staticcheck is a go vet on steroids, applying a ton of static analysis checks.",
 		}, // staticcheck
 		builtin{
-			Dir: dir, Filenames: filenames, name: "structcheck", weight: .05,
+			name: "structcheck", weight: .05,
 			desc: "Finds unused struct fields.",
 		}, // structcheck
 		builtin{
-			Dir: dir, Filenames: filenames, name: "unused", weight: .05,
+			name: "unused", weight: .10,
 			desc: "Scores Go code for unused constants, variables, functions and types.",
 		}, // unused
 		builtin{
-			Dir: dir, Filenames: filenames, name: "varcheck", weight: .05,
+			name: "varcheck", weight: .05,
 			desc: "Finds unused global variables and constants.",
 		}, // varcheck
 		builtin{
-			Dir: dir, Filenames: filenames, name: "typecheck", weight: .05,
+			name: "typecheck", weight: .05,
 			desc: "Like the front-end of a Go compiler, parses and type-checks Go codes.",
 		}, // typecheck
 		builtin{
-			Dir: dir, Filenames: filenames, name: "funlen", weight: .05,
+			name: "funlen", weight: .10,
 			desc: "Tool for detection of long functions.",
 		}, // funlen
 		builtin{
-			Dir: dir, Filenames: filenames, name: "lll", weight: .05,
+			name: "lll", weight: .10,
 			desc: "Reports long lines.",
 		}, // lll
 		builtin{
-			Dir: dir, Filenames: filenames, name: "nestif", weight: .05,
+			name: "nestif", weight: .15,
 			desc: "Reports deeply nested if statements.",
 		}, // nestif
 	}
 }
 
-// execLinter exec linter.Percentage and send types.Score by `chanScore`
-func execLinter(linter ILinter, chanScore chan<- types.Score) {
+// execLinter exec linter.Execute and send types.Score by `chanScore`
+func execLinter(ctx Context, linter ILinter, chanScore chan<- types.Score) {
 	var errMsg string
-	p, summaries, err := linter.Percentage()
+	p, summaries, err := linter.Execute(ctx)
 	if err != nil {
 		log.Errorf("Lint run linter=%s failed, err=%v", linter.Name(), err)
 		errMsg = err.Error()

@@ -10,7 +10,7 @@ type ILinter interface {
 	// Name of ILinter
 	Name() string
 
-	// Desc of ILinter
+	// Description of ILinter
 	Description() string
 
 	// Weight of ILinter to calc score
@@ -18,5 +18,5 @@ type ILinter interface {
 
 	// Percentage returns the passing percentage of the check,
 	// as well as a map of filename to output
-	Percentage() (float64, []types.FileSummary, error)
+	Execute(ctx Context) (float64, []types.FileSummary, error)
 }

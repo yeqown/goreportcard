@@ -17,7 +17,7 @@ import (
 )
 
 // executing golangci-lint tool, and return result
-func doling(p *types.RepoReportParam, forceRefresh bool) (types.LintResult, error) {
+func doling(p *types.RepoReportParam, forceRefresh bool) (result types.LintReport, err error) {
 	log.WithFields(log.Fields{
 		"param":        p,
 		"forceRefresh": forceRefresh,
@@ -35,24 +35,29 @@ func doling(p *types.RepoReportParam, forceRefresh bool) (types.LintResult, erro
 	// fetch the repoIdentity and grade it
 	root, err := vcshelper.GetDownloader().Download(p.Repo(), types.GetConfig().RepoRoot, p.Branch())
 	if err != nil {
-		return types.LintResult{}, errors.Errorf("could not clone repoIdentity: %v", err)
+		return types.LintReport{}, errors.Errorf("could not clone repoIdentity: %v", err)
 	}
 	log.WithFields(log.Fields{
 		"repo": p.Repo(),
 	}).Infof("repo has been downloaded")
 
-	result, err := linter.Lint(root)
-	if err != nil {
-		return types.LintResult{}, err
+	// execute lint.Lint
+	ctx := linter.Context{
+		Dir:    root,
+		Branch: p.Branch(),
+	}
+	var r types.LintResult
+	if r, err = linter.Lint(ctx); err != nil {
+		return
 	}
 
 	t := time.Now().UTC()
-	lintResult := types.LintResult{
-		Scores:               result.Scores,
-		Average:              result.Average,
-		Grade:                result.Grade,
-		FilesCount:           result.Files,
-		IssuesCount:          result.Issues,
+	lintResult := types.LintReport{
+		Scores:               r.Scores,
+		Average:              r.Average,
+		Grade:                r.Grade,
+		FilesCount:           r.Files,
+		IssuesCount:          r.Issues,
 		Repo:                 p.Repo(),
 		ResolvedRepo:         p.Repo(),
 		Branch:               p.Branch(),
@@ -94,7 +99,7 @@ func lintResultKey(p *types.RepoReportParam) []byte {
 
 // loadLintResult query lintResult by repoIdentity, if hit in DB then return,
 // otherwise return an error.
-func loadLintResult(p *types.RepoReportParam) (*types.LintResult, error) {
+func loadLintResult(p *types.RepoReportParam) (*types.LintReport, error) {
 	key := lintResultKey(p)
 	data, err := repository.GetRepo().Get(key)
 	if err != nil {
@@ -102,7 +107,7 @@ func loadLintResult(p *types.RepoReportParam) (*types.LintResult, error) {
 	}
 
 	// TRUE: hit cache
-	resp := new(types.LintResult)
+	resp := new(types.LintReport)
 	if err = json.Unmarshal(data, resp); err != nil {
 		return nil, err
 	}
@@ -115,7 +120,7 @@ func loadLintResult(p *types.RepoReportParam) (*types.LintResult, error) {
 }
 
 // updateLintResult update lintResult in DB.
-func updateLintResult(p *types.RepoReportParam, result types.LintResult) error {
+func updateLintResult(p *types.RepoReportParam, result types.LintReport) error {
 	data, err := json.Marshal(result)
 	if err != nil {
 		return errors.Wrap(err, "updateLintResult.jsonMarshal")
@@ -237,7 +242,7 @@ func loadHighScores() (scores ScoreHeap, err error) {
 }
 
 // updateHighScores .
-func updateHighScores(result types.LintResult, p *types.RepoReportParam) (err error) {
+func updateHighScores(result types.LintReport, p *types.RepoReportParam) (err error) {
 	var (
 		_repo = repository.GetRepo()
 		d     []byte
@@ -356,7 +361,7 @@ func incrReposCnt(repoIdentity string) (err error) {
 }
 
 // updateMetadata to record some data of goreportcard
-func updateMetadata(result types.LintResult, p *types.RepoReportParam, isNewRepo bool) (err error) {
+func updateMetadata(result types.LintReport, p *types.RepoReportParam, isNewRepo bool) (err error) {
 	// increase repos count
 	if isNewRepo {
 		if err = incrReposCnt(p.RepoIdentity()); err != nil {

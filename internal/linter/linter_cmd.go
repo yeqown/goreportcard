@@ -108,9 +108,8 @@ func isGenerated(fp string) bool {
 }
 
 // assembleRemoteFileURI with repoDir, branchName and relativePathToFile
-func assembleRemoteFileURI(dir, relativePath string) (URI string) {
+func assembleRemoteFileURI(dir, branch, fileRelativePath string) (URI string) {
 	root := strings.TrimPrefix(dir, types.GetConfig().RepoRoot)
-	branchName := "master"
 	// default means, https://HOST/blob/BRANCH_NAME/PATH_TO_FILE
 	uriFmt := "https://%s/blob/%s/%s"
 	for _, rule := range types.GetConfig().URIFormatRules {
@@ -119,9 +118,9 @@ func assembleRemoteFileURI(dir, relativePath string) (URI string) {
 		}
 	}
 
-	// log.Debugf("assembleRemoteFileURI got uriFmt=%s, root=%s, branchName=%s, relativePath=%s",
-	// 	uriFmt, root, branchName, relativePath)
-	return fmt.Sprintf(uriFmt, root, branchName, relativePath)
+	// log.Debugf("assembleRemoteFileURI got uriFmt=%s, root=%s, branchName=%s, fileRelativePath=%s",
+	// 	uriFmt, root, branchName, fileRelativePath)
+	return fmt.Sprintf(uriFmt, root, branch, fileRelativePath)
 }
 
 // issue as following format:
@@ -160,13 +159,12 @@ type golangciLintOutput struct {
 }
 
 // parseGolangciLintInJSON parse json output into types.FileSummary
-func parseGolangciLintInJSON(data []byte, dir string) ([]types.FileSummary, error) {
+func parseGolangciLintInJSON(ctx Context, data []byte) ([]types.FileSummary, error) {
 	output := new(golangciLintOutput)
 	if err := json.Unmarshal(data, output); err != nil {
 		return nil, errors.Wrap(err, "parseGolangciLintInJSON.jsonUnmarshal")
 	}
 
-	// log.Debugf("parseGolangciLintInJSON got result=%s, output=%+v", data, output)
 	m := make(map[string]*types.FileSummary, 64)
 	for _, issue := range output.Issues {
 		if !strings.HasSuffix(issue.Pos.Filename, ".go") {
@@ -180,7 +178,7 @@ func parseGolangciLintInJSON(data []byte, dir string) ([]types.FileSummary, erro
 				break
 			}
 		}
-		if isGenerated(filepath.Join(dir, issue.Pos.Filename)) {
+		if isGenerated(filepath.Join(ctx.Dir, issue.Pos.Filename)) {
 			continue
 		}
 
@@ -192,11 +190,11 @@ func parseGolangciLintInJSON(data []byte, dir string) ([]types.FileSummary, erro
 			// summary of `filename` with error not exists, then initialize the one
 			summary = &types.FileSummary{
 				Filename: issue.Pos.Filename,
-				FileURL:  assembleRemoteFileURI(dir, issue.Pos.Filename),
+				FileURL:  assembleRemoteFileURI(ctx.Dir, ctx.Branch, issue.Pos.Filename),
 			}
 		}
 
-		// TODO: add more message to Error and show them out
+		// NOTE: add more message to Error and show them out
 		summary.AddError(types.Error{
 			LineNumber:  issue.Pos.Line,
 			ErrorString: issue.Text,
@@ -214,21 +212,23 @@ func parseGolangciLintInJSON(data []byte, dir string) ([]types.FileSummary, erro
 
 // cmdHelper runs a given go command (for example gofmt, go tool vet)
 // on a directory
-func cmdHelper(dir string, filenames, command []string) (float64, []types.FileSummary, error) {
+func cmdHelper(ctx Context, command []string) (float64, []types.FileSummary, error) {
 	params := command[1:]
 	params = append(params, "./...")
 
 	cmd := exec.Command(command[0], params...)
-	cmd.Dir, _ = filepath.Abs(dir)
+	cmd.Dir, _ = filepath.Abs(ctx.Dir)
+	log.WithFields(log.Fields{
+		"command": cmd.String(),
+		"dir":     cmd.Dir,
+	}).Debug("cmdHelper got command")
 
-	log.Debugf("cmdHelper got command=[%s] in Dir=[%s]", cmd.String(), cmd.Dir)
-
-	// create an pipe to recv stdout message
-	r, err := cmd.StdoutPipe()
+	// create an pipe to receive stdout message
+	pipe, err := cmd.StdoutPipe()
 	if err != nil {
 		return 0, nil, errors.Wrap(err, "cmdHelper.cmd.StdoutPipe")
 	}
-	defer r.Close()
+	defer pipe.Close()
 	cmd.Stderr = cmd.Stdout
 
 	if err = cmd.Start(); err != nil {
@@ -238,16 +238,16 @@ func cmdHelper(dir string, filenames, command []string) (float64, []types.FileSu
 	// the same file can appear multiple times out of order
 	// in the output, so we can't go line by line, have to store
 	// a map of filename to FileSummary
-	summaries, err := scanAndWait(r, cmd, dir)
+	summaries, err := scanAndWait(ctx, pipe, cmd)
 	if err != nil {
 		log.Warnf("cmdHelper failed to scanAndWait, err=%v", err)
 		return 0, nil, err
 	}
 
-	log.Debugf("one cmd=%s finished", cmd.String())
-	// TRUE: sif only 1 file, so calc socre = sum(error line) / sum(line)
-	if len(filenames) == 1 {
-		lc, err := lineCount(filenames[0])
+	log.WithFields(log.Fields{"cmd": cmd.String()}).Debug("one cmd finished")
+	// TRUE: sif only 1 file, so calc score = sum(error line) / sum(line)
+	if len(ctx.Filenames) == 1 {
+		lc, err := lineCount(ctx.Filenames[0])
 		if err != nil {
 			return 0, summaries, err
 		}
@@ -261,7 +261,7 @@ func cmdHelper(dir string, filenames, command []string) (float64, []types.FileSu
 	}
 
 	// ELSE: sum(no error file) / sum(file)
-	return float64(len(filenames)-len(summaries)) / float64(len(filenames)), summaries, nil
+	return float64(len(ctx.Filenames)-len(summaries)) / float64(len(ctx.Filenames)), summaries, nil
 }
 
 // scanAndWait scan stdout and call `cmd.Wait`,
@@ -270,7 +270,7 @@ func cmdHelper(dir string, filenames, command []string) (float64, []types.FileSu
 // 1. get all stdout
 // 2. judge cmd status, error to return
 // 3. else to parse error output
-func scanAndWait(r io.ReadCloser, cmd *exec.Cmd, dir string) ([]types.FileSummary, error) {
+func scanAndWait(ctx Context, r io.ReadCloser, cmd *exec.Cmd) ([]types.FileSummary, error) {
 	scanner := bufio.NewScanner(r)
 	buf := bytes.NewBuffer(nil)
 
@@ -281,7 +281,6 @@ func scanAndWait(r io.ReadCloser, cmd *exec.Cmd, dir string) ([]types.FileSummar
 	if err := scanner.Err(); err != nil {
 		return nil, errors.Wrap(err, "cmdHelper.scanner.Err")
 	}
-	// log.Debugf("scanAndWait got linesBuf.length = %d", len(linesBuf))
 
 	// 2. wait and judge command exit status
 	err := cmd.Wait()
@@ -300,7 +299,7 @@ func scanAndWait(r io.ReadCloser, cmd *exec.Cmd, dir string) ([]types.FileSummar
 
 parse:
 	// 3. command runs and quit normal, parse stdout errors
-	summaries, err := parseGolangciLintInJSON(buf.Bytes(), dir)
+	summaries, err := parseGolangciLintInJSON(ctx, buf.Bytes())
 	if err != nil {
 		return nil, errors.Wrap(err, "cmdHelper.parseStdoutLines")
 	}

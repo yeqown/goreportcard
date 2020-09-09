@@ -32,8 +32,8 @@ type Score struct {
 	Error      string        `json:"error"`
 }
 
-// LintResult report structure of a lint process to some repository
-type LintResult struct {
+// LintReport report structure of a lint process to some repository
+type LintReport struct {
 	Scores               []Score   `json:"scores"`
 	Average              float64   `json:"average"`
 	Grade                Grade     `json:"grade"`
@@ -47,8 +47,8 @@ type LintResult struct {
 	LastRefreshHumanized string    `json:"humanized_last_refresh"`
 }
 
-// ChecksResult represents the combined result of multiple checks
-type ChecksResult struct {
+// LintResult represents the combined result of multiple checks
+type LintResult struct {
 	Scores  []Score `json:"checks"`
 	Average float64 `json:"average"`
 	Grade   Grade   `json:"grade_from_percentage"`

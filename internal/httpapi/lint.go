@@ -11,7 +11,6 @@ import (
 )
 
 const (
-	_masterBranch  = "master"
 	_repoFormKey   = "repo"
 	_branchFormKey = "branch"
 )
@@ -28,7 +27,7 @@ func LintHandler(w http.ResponseWriter, r *http.Request) {
 	}).Infof("checking repo")
 
 	if branch == "" {
-		branch = _masterBranch
+		branch = types.MasterBranch
 	}
 
 	// if this is a GET request, try to fetch from cached version in badger first

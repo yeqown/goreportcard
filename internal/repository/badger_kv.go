@@ -33,7 +33,7 @@ func (br badgerRepo) Get(key []byte) (out []byte, err error) {
 			return ErrKeyNotFound
 		}
 
-		log.Debugf("item = %s", item.String())
+		log.WithField("item", item).Debug("Get one item")
 
 		// copy value to `out`s
 		out = make([]byte, item.ValueSize())

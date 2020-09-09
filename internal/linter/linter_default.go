@@ -5,12 +5,9 @@ import "github.com/yeqown/goreportcard/internal/types"
 var _ ILinter = &builtin{}
 
 type builtin struct {
-	Dir       string
-	Filenames []string
-
-	name   string
-	desc   string
-	weight float64
+	name   string  // linter's name
+	desc   string  // linter's desc
+	weight float64 // linter's weight
 }
 
 func (b builtin) Name() string {
@@ -25,7 +22,7 @@ func (b builtin) Weight() float64 {
 	return b.weight
 }
 
-func (b builtin) Percentage() (float64, []types.FileSummary, error) {
+func (b builtin) Execute(ctx Context) (float64, []types.FileSummary, error) {
 	command := []string{
 		"golangci-lint", "run",
 		"--out-format=json",
@@ -33,9 +30,9 @@ func (b builtin) Percentage() (float64, []types.FileSummary, error) {
 		"--disable-all",
 		"--enable=" + b.name,
 		"--allow-parallel-runners",
-		"--skip-dirs-use-default",
+		"--skip-dirs-use-default=true",
 		"--tests=false",
 	}
 
-	return cmdHelper(b.Dir, b.Filenames, command)
+	return cmdHelper(ctx, command)
 }
