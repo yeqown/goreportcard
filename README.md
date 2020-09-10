@@ -32,7 +32,7 @@ docker run
     --env GOPRIVATE=git.medlinker.com \ 
     --env GOPROXY=https://goproxy.io,direct \ 
     -d \
-    goreportcard:v1.0.0
+    goreportcard:v1.3.0
 ```
 
 > fakehome 中会存放 .ssh；goreportcard 的配置文件；拉取下来的源代码
