@@ -71,8 +71,8 @@ func (c builtinToolVCS) run1(dir string, cmdline string, keyval []string, verbos
 	cmd.Dir = dir
 	cmd.Env = envForDir(cmd.Dir)
 
-	log.Debugf("cd %s\n", dir)
-	log.Debugf("%s %s\n", c.Cmd, strings.Join(args, " "))
+	log.Debugf("cd %s", dir)
+	log.Debugf("%s %s", c.Cmd, strings.Join(args, " "))
 
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
