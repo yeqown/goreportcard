@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: goreportcard
+  labels:
+    app: goreportcard
+    app.kubernetes.io/name: goreportcard
+    app.kubernetes.io/component: web
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: goreportcard
+      app.kubernetes.io/name: goreportcard
+      app.kubernetes.io/component: web
+  template:
+    metadata:
+      labels:
+        app: goreportcard
+        app.kubernetes.io/name: goreportcard
+        app.kubernetes.io/component: web
+    spec:
+      containers:
+        - image: yeqown/goreportcard:v1.4.1
+          name: goreportcard
+#          args: ["--config-file=/conf/query.yaml"]
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: "/"
+              port: 8000
+          volumeMounts:
+            - name: goreportcard-configuration-volume
+              mountPath: /root
+#          env:
+#            - name: SPAN_STORAGE_TYPE
+#              valueFrom:
+#                configMapKeyRef:
+#                  name: goreportcard-configuration
+#                  key: span-storage-type
+      volumes:
+        - configMap:
+            name: goreportcard-configuration
+            items:
+              - key: ssh-pub
+                path: .ssh/id_rsa.pub
+              - key: goreportcard
+                path: goreportcard.toml
+#              - key: golangci-lint
+#                path: .golangci.toml
+          name: goreportcard-configuration-volume

@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: goreportcard-configuration
+  labels:
+    app: goreportcard
+    app.kubernetes.io/name: goreportcard
+data:
+  ssh-pub: |
+    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCno0HmFOJ101qAkt2ivIZmeLq/HMu6ix5LkFLPFGavvam3j9jevEWjOdi0UffpxCeXkj6yWs6Es+E4zLm5MeOOEjKoeo9U5zPhKdioRVMUAjA+aGhMDZQlX4BEPbpaNOh9J83DjCnK5PAk/fy101GWz6Y5lfo/Rc6kIayAWrhxKDNV2sYMkWR8RpqgEo/o9R+xI8h6weQCl/6747Xdmncq1L7UnQruHwATJuuQpJiWF45LQDaIEooFRACxr8ho0zOtpCc9R+OW3U1FWI/eNlyBvFvmMqwhPBn858lGZdEUkTSclSr6JlkAdm54HwUURyhjSPf+qBxFrOmC2+pgvNwaekJoQMq+fxABYwRdrUHWESdaqoU20itXRFOPuvL1BBvPBxYIa1jSaV0R8RUSjQj/LNXgcTUTTHYdBoruYt2D/zbWp3TJb9fZ6q1H6QADYMMkB67KpOeqUANgGJcZErtwSC8d+hN4PvWCkYncZOhSQaX5/SfUDTk+VP/sdd1GqMKwrs2EITL2roMFRBKEiBmJqWRbvM1LwiX0Y9VN82lajURG+xyTkhHbi3BROy4jkQ6eu+3wEBIjS/71W8e7GShrHcPtFrezKt6pUU1P7u4ZnEY2OztJzJsDdDsXnWMinjrfwIkSMQs36hZpvYbmMi883IGSVArGhkKCGfgutdYL/w== yeqiang@medlinker.com
+  goreportcard: |
+    port = 8000
+    db = 2
+    vcs = 2
+    repoRoot = "/app/goreportcard/repos"
+    skipDirs = []
+    domain = "http://localhost:8000"
+    [[vcs_options]]
+      Host = "github.com"
+      PrivateKeyPath = "/Users/med/.ssh/id_rsa"
+      Prefix = "git"
+    [[uriFormatRules]]
+      prefix = "github.com"
+      uriFormat = "https://%s/blob/%s/%s"
+#  golangci-lint: |

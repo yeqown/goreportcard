@@ -1,6 +1,8 @@
 port = 8000
-db = 1      # 1 for redis,  2 for badger
-vcs = 2     # 1 for go-git, 2 for git command
+# 1 for redis,  2 for badger
+db = 1
+# 1 for go-git, 2 for git command
+vcs = 2
 repoRoot = "/Users/med/goreportcard-repos"
 skipDirs = []
 domain = "http://localhost:8000"
